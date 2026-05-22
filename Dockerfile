@@ -16,6 +16,9 @@ COPY pyproject.toml uv.lock* /app/
 # Install the project's dependencies
 RUN if [ -f uv.lock ]; then uv sync --frozen --no-install-project; else uv sync --no-install-project; fi
 
+# Copy the rest of the application code
+COPY . /app
+
 # Complete the sync to install the project itself (if applicable)
 RUN if [ -f uv.lock ]; then uv sync --frozen; else uv sync; fi
 
