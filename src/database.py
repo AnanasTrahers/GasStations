@@ -1,11 +1,22 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.sql.schema import MetaData
 
 from src.config import settings
+
+metadata = MetaData(schema="app")
+
+
+class Base(DeclarativeBase):
+    metadata: MetaData = metadata
+
 
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=True,
+    connect_args={
+        "server_settings": {"search_path": "app, public, topology"}
+    }
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -17,5 +28,3 @@ AsyncSessionLocal = async_sessionmaker(
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
-
-Base = declarative_base()

@@ -7,6 +7,7 @@ dependencies = [
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
     "fastapi>=0.136.1",
+    "geoalchemy2>=0.20.0",
     "pydantic-settings>=2.14.1",
     "sqlalchemy>=2.0.49",
     "uvicorn>=0.47.0",
