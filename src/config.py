@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     MAPBOX_API_KEY: str
     MAPBOX_BASE_URL: str
     MAPBOX_DIRECTIONS_ENDPOINT: str
+    MAPBOX_MATRIX_ENDPOINT: str
 
     FUEL_PRICE_SAFE_DAYS: int
 
