@@ -8,6 +8,10 @@ from geoalchemy2 import Geography
 from src.models import GasStation
 
 
+async def get_coordinates(directions_json: dict) -> list[list[float]]:
+    return directions_json["routes"][0]["geometry"]["coordinates"]
+
+
 async def fetch_on_route_stations(
         coordinates: list[list[float]],
         buffer_radius: int,
