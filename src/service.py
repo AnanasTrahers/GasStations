@@ -48,7 +48,7 @@ def map_stations_to_dto(
         result.append(
             StationDTO(
                 station_id=station.id,
-                coordinates=f"{point.x},{point.y}",
+                coordinates=(point.x, point.y),
                 network_id=station.network_id,
                 network_name=station.network.name
             )

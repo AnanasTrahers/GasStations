@@ -3,7 +3,7 @@ from typing import TypedDict, NotRequired
 
 class StationDTO(TypedDict):
     station_id: int
-    coordinates: str
+    coordinates: tuple[float, float]
     network_id: int
     network_name: str
 
