@@ -10,4 +10,4 @@ class StationDTO(TypedDict):
     price_per_liter: NotRequired[float]
     fuel_price: NotRequired[float]
     distance: NotRequired[float]
-    time: NotRequired[float]
+    duration: NotRequired[float]

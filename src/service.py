@@ -13,7 +13,7 @@ from src.models import GasStation, FuelPrice
 from src.schemas import StationDTO
 
 
-async def get_coordinates(directions_json: dict) -> list[list[float]]:
+def get_coordinates(directions_json: dict) -> list[list[float]]:
     return directions_json["routes"][0]["geometry"]["coordinates"]
 
 
@@ -108,3 +108,36 @@ def calculate_fuel_prices(
         station["fuel_price"] = station["price_per_liter"] * volume
 
     return gas_stations
+
+
+def calculate_distances_and_durations(
+        gas_stations: list[StationDTO],
+        forward_matrix: dict,
+        backward_matrix: dict
+) -> list[StationDTO]:
+    forward_distances = forward_matrix["distances"]
+    backward_distances = backward_matrix["distances"]
+
+    forward_durations = forward_matrix["durations"]
+    backward_durations = backward_matrix["durations"]
+
+    new_stations = []
+
+    for i, station in enumerate(gas_stations):
+        f_distance = forward_distances[0][i]
+        b_distance = backward_distances[i][0]
+
+        if f_distance is None or b_distance is None:
+            continue
+        station["distance"] = f_distance + b_distance
+
+        f_duration = forward_durations[0][i]
+        b_duration = backward_durations[i][0]
+
+        if f_duration is None or b_duration is None:
+            continue
+        station["duration"] = f_duration + b_duration
+
+        new_stations.append(station)
+
+    return new_stations
