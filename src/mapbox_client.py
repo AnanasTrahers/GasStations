@@ -1,6 +1,7 @@
 import httpx
 
 from src.config import settings
+from src.schemas import Coords
 
 
 class MapboxClient:
@@ -12,9 +13,9 @@ class MapboxClient:
 
     @staticmethod
     def _build_coordinates_string(
-            coordinates: list[tuple[float, float]]
+            coordinates: list[Coords]
     ) -> str:
-        return ";".join(f"{lng},{lat}" for lng, lat in coordinates)
+        return ";".join(f"{coord.lng},{coord.lat}" for coord in coordinates)
 
     @staticmethod
     def _get_destination_or_source_indices(coordinates: str) -> str:
@@ -23,9 +24,9 @@ class MapboxClient:
         return ";".join(str(i) for i in range(1, count + 1))
 
     async def get_direction_no_instructions(
-            self, start: tuple[float, float], end: tuple[float, float]
+            self, coords: list[Coords]
     ) -> dict:
-        coordinates = self._build_coordinates_string([start, end])
+        coordinates = self._build_coordinates_string(coords)
         endpoint = self.directions_endpoint + coordinates
 
         params = {
@@ -40,8 +41,8 @@ class MapboxClient:
 
     async def get_forward_matrix(
             self,
-            start: tuple[float, float],
-            coordinates: list[tuple[float, float]]
+            start: Coords,
+            coordinates: list[Coords]
     ) -> dict:
         coordinates_str = self._build_coordinates_string([start] + coordinates)
         endpoint = self.matrix_endpoint + coordinates_str
@@ -62,8 +63,8 @@ class MapboxClient:
 
     async def get_backward_matrix(
             self,
-            end: tuple[float, float],
-            coordinates: list[tuple[float, float]]
+            end: Coords,
+            coordinates: list[Coords]
     ) -> dict:
         coordinates_str = self._build_coordinates_string([end] + coordinates)
         endpoint = self.matrix_endpoint + coordinates_str

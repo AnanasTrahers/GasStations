@@ -1,9 +1,13 @@
 from typing import TypedDict, NotRequired
+from collections import namedtuple
+
+
+Coords = namedtuple("Coords", ["lng", "lat"])
 
 
 class StationDTO(TypedDict):
     station_id: int
-    coordinates: tuple[float, float]
+    coordinates: Coords
     network_id: int
     network_name: str
 
