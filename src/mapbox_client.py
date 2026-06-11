@@ -1,7 +1,9 @@
+from dataclasses import asdict
+
 import httpx
 
 from src.config import settings
-from src.schemas import Coords
+from src.schemas import Coords, DirectionsParams
 
 
 class MapboxClient:
@@ -23,16 +25,23 @@ class MapboxClient:
 
         return ";".join(str(i) for i in range(1, count + 1))
 
-    async def get_direction_no_instructions(
-            self, coords: list[Coords]
+    @staticmethod
+    def _build_approaches_string(n: int) -> str:
+        approaches = ["unrestricted"]
+        approaches += ["curb"] * (n - 1)
+
+        return ";".join(approaches)
+
+    async def get_direction(
+            self, coords: list[Coords], params: DirectionsParams
     ) -> dict:
         coordinates = self._build_coordinates_string(coords)
         endpoint = self.directions_endpoint + coordinates
 
-        params = {
-            "access_token": self.api_key,
-            "geometries": "geojson",
-        }
+        params = {key: value for key, value in asdict(params).items() if value is not None}
+
+        params["access_token"] = self.api_key
+        params["approaches"] = self._build_approaches_string(len(coords))
 
         r = await self.client.get(endpoint, params=params)
         r.raise_for_status()
