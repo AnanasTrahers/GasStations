@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     MAPBOX_BASE_URL: str
     MAPBOX_DIRECTIONS_ENDPOINT: str
     MAPBOX_MATRIX_ENDPOINT: str
+    MAPBOX_ISOCHRONE_ENDPOINT: str
 
     FUEL_PRICE_SAFE_DAYS: int
 

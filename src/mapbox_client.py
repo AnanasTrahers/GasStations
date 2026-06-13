@@ -12,6 +12,7 @@ class MapboxClient:
         self.api_key = settings.MAPBOX_API_KEY
         self.directions_endpoint = settings.MAPBOX_DIRECTIONS_ENDPOINT
         self.matrix_endpoint = settings.MAPBOX_MATRIX_ENDPOINT
+        self.isochrone_endpoint = settings.MAPBOX_ISOCHRONE_ENDPOINT
 
     @staticmethod
     def _build_coordinates_string(
@@ -85,6 +86,22 @@ class MapboxClient:
             "annotations": "duration,distance",
             "sources": source_indices,
             "destinations": 0
+        }
+
+        r = await self.client.get(endpoint, params=params)
+        r.raise_for_status()
+
+        return r.json()
+
+    async def get_isochrones(self, point: Coords, radiuses: list[int]) -> dict:
+        coordinates_str = self._build_coordinates_string([point])
+        endpoint = self.isochrone_endpoint + coordinates_str
+
+        params = {
+            "access_token": self.api_key,
+            "contours_minutes": ",".join(radiuses),
+            "polygons": "true",
+            "generalize": 50,
         }
 
         r = await self.client.get(endpoint, params=params)
