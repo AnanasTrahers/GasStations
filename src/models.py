@@ -28,7 +28,7 @@ class GasStation(Base):
     __tablename__ = "gas_stations"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    geom: Mapped[str | WKBElement] = mapped_column(
+    geog: Mapped[str | WKBElement] = mapped_column(
         Geography(geometry_type="Point", srid=4326)
     )
     network_id: Mapped[int] = mapped_column(ForeignKey("networks.id"))
