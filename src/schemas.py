@@ -1,9 +1,14 @@
+from enum import Enum
 from typing import TypedDict, NotRequired
 from collections import namedtuple
 from dataclasses import dataclass
 
 
 Coords = namedtuple("Coords", ["lng", "lat"])
+
+class MatrixDirection(str, Enum):
+    FORWARD = "forward"
+    BACKWARD = "backward"
 
 
 class StationDTO(TypedDict):
