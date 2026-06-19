@@ -14,6 +14,10 @@ from src.schemas import StationDTO, Coords
 from math import floor
 
 
+def build_coordinates_tuple(lng: float, lat: float) -> Coords:
+    return Coords(lng=lng, lat=lat)
+
+
 def get_route_coordinates(directions_json: dict) -> list[list[float]]:
     return directions_json["routes"][0]["geometry"]["coordinates"]
 
@@ -58,7 +62,7 @@ def map_stations_to_dto(rows: Sequence[Row]) -> list[StationDTO]:
     return [
         StationDTO(
             station_id=row.station_id,
-            coordinates=Coords(row.lng, row.lat),
+            coordinates=build_coordinates_tuple(row.lng, row.lat),
             network_id=row.network_id,
             network_name=row.network_name,
             fraction=row.fraction,

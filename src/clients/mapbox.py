@@ -99,7 +99,7 @@ class MapboxClient:
 
         params = {
             "access_token": self.api_key,
-            "contours_minutes": ",".join(radiuses),
+            "contours_minutes": ",".join(str(radiuses)),
             "polygons": "true",
             "generalize": 50,
         }
