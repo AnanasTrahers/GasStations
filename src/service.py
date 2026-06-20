@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime, timezone, timedelta
+from itertools import groupby, islice
 
 from shapely import Geometry
 from shapely.geometry import LineString
@@ -10,8 +11,7 @@ from geoalchemy2 import Geography, WKTElement
 
 from src.config import settings
 from src.models import GasStation, FuelPrice, Network
-from src.schemas import StationDTO, Coords
-from math import floor
+from src.schemas import Coords, Station
 
 
 def build_coordinates_tuple(lng: float, lat: float) -> Coords:
@@ -24,7 +24,7 @@ def get_route_coordinates(directions_json: dict) -> list[list[float]]:
 
 def get_route_wkt(coordinates_list: list[list[float]]):
     line = LineString(coordinates_list)
-    return line.wkt
+    return WKTElement(line.wkt, srid=4326)
 
 
 async def fetch_on_route_stations(
@@ -58,30 +58,17 @@ async def fetch_on_route_stations(
     return result.all()
 
 
-def map_stations_to_dto(rows: Sequence[Row]) -> list[StationDTO]:
-    return [
-        StationDTO(
-            station_id=row.station_id,
-            coordinates=build_coordinates_tuple(row.lng, row.lat),
-            network_id=row.network_id,
-            network_name=row.network_name,
-            fraction=row.fraction,
-        )
-        for row in rows
-    ]
-
-
 def assign_segment_ids(
-        stations: list[StationDTO],
+        stations: list[Station],
         route_length_m: float,
         segment_length_m: float
 ) -> None:
     for station in stations:
-        station["segment_id"] = floor(station["fraction"] * route_length_m / segment_length_m)
+        station.assign_segment_id(route_length_m, segment_length_m)
 
 
-def get_unique_network_ids(stations: list[StationDTO]) -> set[int]:
-    return {station["network_id"] for station in stations}
+def get_unique_network_ids(stations: list[Station]) -> set[int]:
+    return {station.network_id for station in stations}
 
 
 async def fetch_fuel_prices(
@@ -117,16 +104,64 @@ def map_fuel_prices_to_dict(rows: Sequence[Row]) -> dict:
     }
 
 
-def merge_stations_dto_and_prices_dict(
-        stations: list[StationDTO],
+def merge_stations_and_prices(
+        stations: list[Station],
         fuel_prices: dict
-) -> list[StationDTO]:
+) -> list[Station]:
     filtered_stations = []
 
     for station in stations:
-        fuel_price = fuel_prices.get(station["network_id"])
+        fuel_price = fuel_prices.get(station.network_id)
         if fuel_price is not None:
-            station["price_per_liter"] = fuel_price
+            station.add_fuel_price_per_liter(fuel_price)
             filtered_stations.append(station)
 
     return filtered_stations
+
+
+def merge_matrixes(
+        forward_matrix: list[float],
+        backward_matrix: list[list[float]]
+) -> list[float]:
+    merged_list = []
+
+    for i in range(len(forward_matrix)):
+        merged_list.append(forward_matrix[i] + backward_matrix[i][0])
+
+    return merged_list
+
+
+def add_total_distances_and_durations(
+        stations: list[Station], distances_m: list, durations_s: list
+) -> None:
+    for station, distance, duration in zip(stations, distances_m, durations_s):
+        station.add_total_distance(distance)
+        station.add_total_duration(duration)
+
+
+def calculate_stations_metrics(
+        stations: list[Station],
+        original_distance_m: float,
+        original_duration_s: float,
+        volume: float,
+        fuel_consumption_1km: float,
+        income_per_minute: float,
+) -> None:
+    for station in stations:
+        station.calculate_distance_difference(original_distance_m)
+        station.calculate_duration_difference(original_duration_s)
+        station.calculate_fuel_price(volume)
+        station.calculate_total_distance(fuel_consumption_1km, income_per_minute)
+
+
+def get_top_stations_for_segment(
+        stations: list[Station],
+        max_per_network: int
+) -> list[Station]:
+    top_stations = []
+    stations.sort(key=lambda x: (x.network_id, x.segment_id, x.total_price))
+
+    for key, group in groupby(stations, key=lambda x: (x.network_id, x.segment_id)):
+        top_stations.extend(islice(group, max_per_network))
+
+    return top_stations
