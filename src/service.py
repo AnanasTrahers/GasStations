@@ -164,4 +164,4 @@ def get_top_stations_for_segment(
     for key, group in groupby(stations, key=lambda x: (x.network_id, x.segment_id)):
         top_stations.extend(islice(group, max_per_network))
 
-    return top_stations
+    return sorted(top_stations, key=lambda x: x["total_price"])
