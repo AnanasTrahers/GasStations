@@ -1,35 +1,75 @@
 from enum import Enum
 from collections import namedtuple
 from dataclasses import dataclass
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from math import floor
 
+from sqlalchemy.engine.row import Row
 
 Coords = namedtuple("Coords", ["lng", "lat"])
+
 
 class MatrixDirection(str, Enum):
     FORWARD = "forward"
     BACKWARD = "backward"
 
 
+class PointCoordinates(BaseModel):
+    lng: float = Field(..., ge=-180, le=180)
+    lat: float = Field(..., ge=-90, le=90)
+
+
+class OnRouteStationsRequest(BaseModel):
+    start: PointCoordinates
+    end: PointCoordinates
+    volume: int = Field(..., gt=0)
+    fuel_consumption: float = Field(..., gt=0)
+    income_per_minute: float = Field(..., ge=0)
+
+
+class GeoJSONLineString(BaseModel):
+    coordinates: list[list[float]]
+
+
+class SimpleRoute(BaseModel):
+    geometry: GeoJSONLineString
+    distance: float = Field(..., gt=0)
+    duration: float = Field(..., gt=0)
+
+
 class Station(BaseModel):
     station_id: int
-    lng: float
-    lat: float
+    coordinates: PointCoordinates
     network_id: int
     network_name: str
-    fraction: float
+    fraction: float = Field(..., ge=0, le=1)
 
     segment_id: int | None = None
-    price_per_liter: float | None = None
-    total_distance_m: float | None = None
-    total_duration_s: float | None = None
-    distance_difference_m: float | None = None
-    duration_difference_s: float | None = None
-    fuel_price: float | None = None
-    total_price: float | None = None
+    price_per_liter: float | None = Field(None, gt=0)
+    total_distance_m: float | None = Field(None, gt=0)
+    total_duration_s: float | None = Field(None, gt=0)
+    distance_difference_m: float | None = Field(None, gt=0)
+    duration_difference_s: float | None = Field(None, gt=0)
+    fuel_price: float | None = Field(None, gt=0)
+    total_price: float | None = Field(None, gt=0)
 
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="before")
+    def map_row_to_schema(cls, data: Row | dict) -> dict:
+        if isinstance(data, dict):
+            return data
+
+        return {
+            "station_id": data.station_id,
+            "coordinates": {
+                "lng": data.lng,
+                "lat": data.lat,
+            },
+            "network_id": data.network_id,
+            "network_name": data.network_name,
+            "fraction": data.fraction
+        }
 
     def assign_segment_id(
             self,
@@ -60,10 +100,80 @@ class Station(BaseModel):
             self, fuel_consumption_1km: float, income_per_minute: float
     ) -> None:
         self.total_price = (
-            self.fuel_price
-            + fuel_consumption_1km * self.distance_difference_m / 1000
-            + income_per_minute * self.duration_difference_s / 60
+                self.fuel_price
+                + fuel_consumption_1km * self.distance_difference_m / 1000
+                + income_per_minute * self.duration_difference_s / 60
         )
+
+
+class OnRouteStationsResponse(BaseModel):
+    original_route: SimpleRoute
+    stations: list[Station]
+
+
+class DetailedRoutesRequest(BaseModel):
+    start: PointCoordinates
+    end: PointCoordinates
+    stations_coordinates: list[PointCoordinates]
+
+
+class BannerText(BaseModel):
+    text: str
+    type: str | None = None
+    modifier: str | None = None
+
+
+class BannerInstruction(BaseModel):
+    distance_along_geometry: float = Field(alias="distanceAlongGeometry")
+    primary: BannerText
+    sub: BannerText | None = None
+
+
+class VoiceInstruction(BaseModel):
+    distance_along_geometry: float = Field(alias="distanceAlongGeometry")
+    announcement: str
+    ssml_announcement: str | None = Field(None, alias="ssmlAnnouncement")
+
+
+class Maneuver(BaseModel):
+    location: list[float]
+    instruction: str
+    type: str
+    modifier: str | None = None
+    bearing_before: int | None = None
+    bearing_after: int | None = None
+
+
+class RouteStep(BaseModel):
+    distance: float = Field(..., gt=0)
+    duration: float = Field(..., gt=0)
+    geometry: GeoJSONLineString
+    maneuver: Maneuver
+    banner_instructions: list[BannerInstruction] = Field([], alias="bannerInstructions")
+    voice_instructions: list[VoiceInstruction] = Field([], alias="voiceInstructions")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class RouteAnnotation(BaseModel):
+    distance: list[float]
+    duration: list[float]
+    speed: list[float]
+
+
+class RouteLeg(BaseModel):
+    distance: float = Field(..., gt=0)
+    duration: float = Field(..., gt=0)
+    steps: list[RouteStep]
+    annotation: RouteAnnotation
+
+
+class DetailedRoute(SimpleRoute):
+    legs: list[RouteLeg]
+
+
+class DetailedRoutesResponse(BaseModel):
+    routes: list[DetailedRoute]
 
 
 @dataclass
@@ -76,7 +186,6 @@ class DirectionsParams:
     language: str = None
     voice_instructions: str = None
     voice_units: str = None
-
 
     @classmethod
     def setup_full_request(cls):
