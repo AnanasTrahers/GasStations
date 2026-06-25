@@ -18,6 +18,22 @@ def get_route_coordinates(directions_json: dict) -> list[list[float]]:
     return directions_json["routes"][0]["geometry"]["coordinates"]
 
 
+def get_route_length(directions_json: dict) -> float:
+    return directions_json["routes"][0]["distance"]
+
+
+def get_route_duration(directions_json: dict) -> float:
+    return directions_json["routes"][0]["duration"]
+
+
+def get_matrix_distances(matrix_json: dict) -> list[float] | list[list[float]]:
+    return matrix_json["distances"]
+
+
+def get_matrix_durations(matrix_json: dict) -> list[float] | list[list[float]]:
+    return matrix_json["durations"]
+
+
 def get_route_wkt(coordinates_list: list[list[float]]):
     line = LineString(coordinates_list)
     return WKTElement(line.wkt, srid=4326)
@@ -115,14 +131,20 @@ def merge_stations_and_prices(
     return filtered_stations
 
 
+def get_stations_coordinates_dicts(stations: list[Station]) -> list[dict]:
+    return [
+        station.coordinates.model_dump() for station in stations
+    ]
+
+
 def merge_matrixes(
         forward_matrix: list[float],
         backward_matrix: list[list[float]]
 ) -> list[float]:
     merged_list = []
 
-    for i in range(len(forward_matrix)):
-        merged_list.append(forward_matrix[i] + backward_matrix[i][0])
+    for i in range(len(backward_matrix)):
+        merged_list.append(forward_matrix[0][i] + backward_matrix[i][0])
 
     return merged_list
 
@@ -147,7 +169,7 @@ def calculate_stations_metrics(
         station.calculate_distance_difference(original_distance_m)
         station.calculate_duration_difference(original_duration_s)
         station.calculate_fuel_price(volume)
-        station.calculate_total_distance(fuel_consumption_1km, income_per_minute)
+        station.calculate_total_price(fuel_consumption_1km, income_per_minute)
 
 
 def get_top_stations_for_segment(
@@ -160,4 +182,4 @@ def get_top_stations_for_segment(
     for key, group in groupby(stations, key=lambda x: (x.network_id, x.segment_id)):
         top_stations.extend(islice(group, max_per_network))
 
-    return sorted(top_stations, key=lambda x: x["total_price"])
+    return sorted(top_stations, key=lambda x: x.total_price)
