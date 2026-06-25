@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, status, Depends
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -15,7 +17,8 @@ from src.schemas import (
     Station,
     MatrixDirection,
     SimpleRoute,
-    GeoJSONLineString
+    GeoJSONLineString,
+    DetailedRoutesResponse, DetailedRoutesRequest, DetailedRoute
 )
 from src.service import (
     get_route_coordinates,
@@ -37,7 +40,7 @@ from src.service import (
     get_top_stations_for_segment
 )
 
-router = APIRouter(prefix="/v1/stations", tags=["Stations"])
+router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
 
 
 @router.post(
@@ -119,4 +122,41 @@ async def get_on_route_stations(
     return {
         "original_route": original_route,
         "stations": top_stations
+    }
+
+
+@router.post(
+    "/detailed-routes",
+    response_model=DetailedRoutesResponse,
+    status_code=status.HTTP_200_OK
+)
+async def get_detailed_routes(
+        coordinates: DetailedRoutesRequest,
+        mapbox_client: AsyncClient = Depends(get_mapbox_client),
+):
+    mapbox = MapboxClient(mapbox_client)
+    directions_params = DirectionsParams()
+    directions_params.setup_full_request()
+
+    tasks = [
+        mapbox.get_direction(
+            [
+                coordinates.start.model_dump(),
+                station.model_dump(),
+                coordinates.end.model_dump()
+            ],
+            directions_params
+        )
+        for station in coordinates.stations
+    ]
+
+    responses = await asyncio.gather(*tasks)
+
+    routes = [
+        DetailedRoute.model_validate(response["routes"][0])
+        for response in responses
+    ]
+
+    return {
+        "routes": routes
     }
