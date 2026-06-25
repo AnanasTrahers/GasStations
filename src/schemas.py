@@ -20,6 +20,7 @@ class OnRouteStationsRequest(BaseModel):
     start: PointCoordinates
     end: PointCoordinates
     volume: int = Field(..., gt=0)
+    fuel_type: str
     fuel_consumption: float = Field(..., gt=0)
     income_per_minute: float = Field(..., ge=0)
 
