@@ -11,11 +11,7 @@ from geoalchemy2 import Geography, WKTElement
 
 from src.config import settings
 from src.models import GasStation, FuelPrice, Network
-from src.schemas import Coords, Station
-
-
-def build_coordinates_tuple(lng: float, lat: float) -> Coords:
-    return Coords(lng=lng, lat=lat)
+from src.schemas import Station
 
 
 def get_route_coordinates(directions_json: dict) -> list[list[float]]:

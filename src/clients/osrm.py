@@ -2,7 +2,7 @@ import httpx
 
 from src.clients.base import BaseRoutingClient
 from src.config import settings
-from src.schemas import Coords, MatrixDirection
+from src.schemas import MatrixDirection
 
 
 class OSRMClient(BaseRoutingClient):
@@ -12,8 +12,8 @@ class OSRMClient(BaseRoutingClient):
 
     async def get_table(
             self,
-            anchor: Coords,
-            coordinates: list[Coords],
+            anchor: dict,
+            coordinates: list[dict],
             direction: MatrixDirection
     ) -> dict:
         return await self._call_matrix(

@@ -1,6 +1,6 @@
 import httpx
 
-from src.schemas import Coords, MatrixDirection
+from src.schemas import MatrixDirection
 
 
 class BaseRoutingClient:
@@ -9,9 +9,9 @@ class BaseRoutingClient:
 
     @staticmethod
     def _build_coordinates_string(
-            coordinates: list[Coords]
+            coordinates: list[dict]
     ) -> str:
-        return ";".join(f"{coord.lng},{coord.lat}" for coord in coordinates)
+        return ";".join(f"{coord["lng"]},{coord["lat"]}" for coord in coordinates)
 
     @staticmethod
     def _build_indices_string(coordinates_count: int) -> str:
@@ -44,8 +44,8 @@ class BaseRoutingClient:
     async def _call_matrix(
             self,
             endpoint: str,
-            anchor: Coords,
-            coordinates: list[Coords],
+            anchor: dict,
+            coordinates: list[dict],
             direction: MatrixDirection,
             additional_params: dict | None = None
     ) -> dict:

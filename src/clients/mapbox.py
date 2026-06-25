@@ -4,7 +4,7 @@ import httpx
 
 from src.clients.base import BaseRoutingClient
 from src.config import settings
-from src.schemas import Coords, DirectionsParams, MatrixDirection
+from src.schemas import DirectionsParams, MatrixDirection
 
 
 class MapboxClient(BaseRoutingClient):
@@ -23,7 +23,7 @@ class MapboxClient(BaseRoutingClient):
         return ";".join(approaches)
 
     async def get_direction(
-            self, coords: list[Coords], params: DirectionsParams
+            self, coords: list[dict], params: DirectionsParams
     ) -> dict:
         coordinates = self._build_coordinates_string(coords)
         endpoint = self.directions_endpoint + coordinates
@@ -37,8 +37,8 @@ class MapboxClient(BaseRoutingClient):
 
     async def get_forward_matrix(
             self,
-            start: Coords,
-            coordinates: list[Coords]
+            start: dict,
+            coordinates: list[dict]
     ) -> dict:
         return await self._call_matrix(
             endpoint=self.matrix_endpoint,
@@ -48,7 +48,7 @@ class MapboxClient(BaseRoutingClient):
             additional_params={"access_token": self.api_key}
         )
 
-    async def get_isochrones(self, point: Coords, radiuses: list[int]) -> dict:
+    async def get_isochrones(self, point: dict, radiuses: list[int]) -> dict:
         coordinates_str = self._build_coordinates_string([point])
         endpoint = self.isochrone_endpoint + coordinates_str
 

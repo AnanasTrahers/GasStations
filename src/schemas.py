@@ -1,12 +1,9 @@
 from enum import Enum
-from collections import namedtuple
 from dataclasses import dataclass
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from math import floor
 
 from sqlalchemy.engine.row import Row
-
-Coords = namedtuple("Coords", ["lng", "lat"])
 
 
 class MatrixDirection(str, Enum):
