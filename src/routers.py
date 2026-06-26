@@ -66,8 +66,7 @@ async def get_on_route_stations(
         original_route_wkt, settings.BUFFER_RADIUS_M, session
     )
 
-    station_list_adapter = TypeAdapter(list[Station])
-    stations = station_list_adapter.validate_python(stations_rows)
+    stations = TypeAdapter(list[Station]).validate_python(stations_rows)
 
     original_route_length = get_route_length(directions_response)
     assign_segment_ids(stations, original_route_length, settings.SEGMENT_LENGTH_M)

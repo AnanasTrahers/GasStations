@@ -3,6 +3,7 @@ from fastapi import FastAPI
 import httpx
 
 from src import routers
+from src.api.middleware import LogIdMiddleware
 from src.config import settings
 
 
@@ -23,3 +24,5 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(routers.router)
+
+app.add_middleware(LogIdMiddleware)
