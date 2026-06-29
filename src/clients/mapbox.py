@@ -48,13 +48,13 @@ class MapboxClient(BaseRoutingClient):
             additional_params={"access_token": self.api_key}
         )
 
-    async def get_isochrones(self, point: dict, radiuses: list[int]) -> dict:
+    async def get_isochrone(self, point: dict) -> dict:
         coordinates_str = self._build_coordinates_string([point])
         endpoint = self.isochrone_endpoint + coordinates_str
 
         params = {
             "access_token": self.api_key,
-            "contours_minutes": ",".join(str(radiuses)),
+            "contours_minutes": settings.ISOCHRONE_CONTOURS_MINUTES,
             "polygons": "true",
             "generalize": 50,
         }
