@@ -1,17 +1,22 @@
 from collections.abc import Sequence
 from datetime import datetime, timezone, timedelta
 from itertools import groupby, islice
+from typing import TypeVar
 
 from shapely import Geometry
 from shapely.geometry import LineString
+from shapely.geometry.polygon import Polygon
 from sqlalchemy.engine.row import Row
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql.expression import select, func, cast
 from geoalchemy2 import Geography, WKTElement
 
+from src.clients.osrm import OSRMClient
 from src.config import settings
 from src.models import GasStation, FuelPrice, Network
-from src.schemas import Station
+from src.schemas import OnRouteStation, NearbyStation, BaseStation, MatrixDirection
+
+StationType = TypeVar('StationType', bound=BaseStation)
 
 
 def get_route_coordinates(directions_json: dict) -> list[list[float]]:
@@ -34,9 +39,16 @@ def get_matrix_durations(matrix_json: dict) -> list[float] | list[list[float]]:
     return matrix_json["durations"]
 
 
-def get_route_wkt(coordinates_list: list[list[float]]):
-    line = LineString(coordinates_list)
-    return WKTElement(line.wkt, srid=4326)
+def get_polygon(isochrones_json: dict) -> list[list[float]]:
+    return isochrones_json["features"][0]["geometry"]["coordinates"]
+
+
+def get_route_wkt(coordinates_list: list[list[float]]) -> WKTElement:
+    return WKTElement(LineString(coordinates_list).wkt, srid=4326)
+
+
+def get_polygon_wkt(coordinates_list: list[list[float]]) -> WKTElement:
+    return WKTElement(Polygon(coordinates_list).wkt, srid=4326)
 
 
 async def fetch_on_route_stations(
@@ -71,7 +83,7 @@ async def fetch_on_route_stations(
 
 
 def assign_segment_ids(
-        stations: list[Station],
+        stations: list[OnRouteStation],
         route_length_m: float,
         segment_length_m: float
 ) -> None:
@@ -79,7 +91,7 @@ def assign_segment_ids(
         station.assign_segment_id(route_length_m, segment_length_m)
 
 
-def get_unique_network_ids(stations: list[Station]) -> set[int]:
+def get_unique_network_ids(stations: list[StationType]) -> set[int]:
     return {station.network_id for station in stations}
 
 
@@ -117,9 +129,9 @@ def map_fuel_prices_to_dict(rows: Sequence[Row]) -> dict:
 
 
 def merge_stations_and_prices(
-        stations: list[Station],
+        stations: list[StationType],
         fuel_prices: dict
-) -> list[Station]:
+) -> list[StationType]:
     filtered_stations = []
 
     for station in stations:
@@ -131,14 +143,14 @@ def merge_stations_and_prices(
     return filtered_stations
 
 
-def get_stations_coordinates_dicts(stations: list[Station]) -> list[dict]:
+def get_stations_coordinates_dicts(stations: list[StationType]) -> list[dict]:
     return [
         station.coordinates.model_dump() for station in stations
     ]
 
 
-def merge_matrixes(
-        forward_matrix: list[float],
+def merge_matrices(
+        forward_matrix: list[list[float]],
         backward_matrix: list[list[float]]
 ) -> list[float]:
     merged_list = []
@@ -150,15 +162,15 @@ def merge_matrixes(
 
 
 def add_total_distances_and_durations(
-        stations: list[Station], distances_m: list, durations_s: list
+        stations: list[StationType], distances_m: list, durations_s: list
 ) -> None:
     for station, distance, duration in zip(stations, distances_m, durations_s):
         station.add_total_distance(distance)
         station.add_total_duration(duration)
 
 
-def calculate_stations_metrics(
-        stations: list[Station],
+def calculate_on_route_stations_metrics(
+        stations: list[OnRouteStation],
         original_distance_m: float,
         original_duration_s: float,
         volume: float,
@@ -172,10 +184,21 @@ def calculate_stations_metrics(
         station.calculate_total_price(fuel_consumption_1km, income_per_minute)
 
 
-def get_top_stations_for_segment(
-        stations: list[Station],
+def calculate_nearby_stations_metrics(
+        stations: list[NearbyStation],
+        volume: float,
+        fuel_consumption_1km: float,
+        income_per_minute: float,
+) -> None:
+    for station in stations:
+        station.calculate_fuel_price(volume)
+        station.calculate_total_price(fuel_consumption_1km, income_per_minute)
+
+
+def get_top_on_route_stations(
+        stations: list[OnRouteStation],
         max_per_network: int
-) -> list[Station]:
+) -> list[OnRouteStation]:
     top_stations = []
     stations.sort(key=lambda x: (x.network_id, x.segment_id, x.total_price))
 
@@ -183,3 +206,78 @@ def get_top_stations_for_segment(
         top_stations.extend(islice(group, max_per_network))
 
     return sorted(top_stations, key=lambda x: x.total_price)
+
+
+def get_top_nearby_stations(
+        stations: list[NearbyStation],
+        max_per_network: int
+) -> list[NearbyStation]:
+    top_stations = []
+    stations.sort(key=lambda x: (x.network_id, x.total_price))
+
+    for key, group in groupby(stations, key=lambda x: x.network_id):
+        top_stations.extend(islice(group, max_per_network))
+
+    return sorted(top_stations, key=lambda x: x.total_price)
+
+
+async def fetch_nearby_stations(
+        polygon_wkt: WKTElement,
+        session: AsyncSession
+) -> Sequence[Row]:
+    polygon_geog = cast(polygon_wkt, Geography(srid=4326))
+    station_geom = cast(GasStation.geog, Geometry(srid=4326))
+
+    stmt = (
+        select(
+            GasStation.id.label("station_id"),
+            GasStation.network_id,
+            Network.name.label("network_name"),
+            func.ST_X(station_geom).label("lng"),
+            func.ST_Y(station_geom).label("lat")
+        )
+        .select_from(GasStation)
+        .join(Network, GasStation.network_id == Network.id)
+        .where(func.ST_Intersects(GasStation.geog, polygon_geog))
+    )
+    result = await session.execute(stmt)
+
+    return result.all()
+
+
+async def fetch_and_merge_fuel_prices(
+        stations: list[StationType],
+        fuel_type: str,
+        session: AsyncSession
+):
+    unique_networks_ids = get_unique_network_ids(stations)
+    fuel_prices = await fetch_fuel_prices(unique_networks_ids, fuel_type, session)
+
+    fuel_prices_dict = map_fuel_prices_to_dict(fuel_prices)
+
+    return merge_stations_and_prices(stations, fuel_prices_dict)
+
+
+async def get_and_apply_matrices(
+        stations: list[StationType],
+        osrm: OSRMClient,
+        start: dict,
+        end: dict,
+) -> None:
+    stations_coordinates = get_stations_coordinates_dicts(stations)
+    forward_matrix = await osrm.get_table(
+        start, stations_coordinates, MatrixDirection.FORWARD
+    )
+    forward_distances = get_matrix_distances(forward_matrix)
+    forward_durations = get_matrix_durations(forward_matrix)
+
+    backward_matrix = await osrm.get_table(
+        end, stations_coordinates, MatrixDirection.BACKWARD
+    )
+    backward_distances = get_matrix_distances(backward_matrix)
+    backward_durations = get_matrix_durations(backward_matrix)
+
+    distances_list = merge_matrices(forward_distances, backward_distances)
+    durations_list = merge_matrices(forward_durations, backward_durations)
+
+    add_total_distances_and_durations(stations, distances_list, durations_list)
