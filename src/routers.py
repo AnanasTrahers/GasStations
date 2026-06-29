@@ -14,11 +14,15 @@ from src.schemas import (
     OnRouteStationsResponse,
     OnRouteStationsRequest,
     DirectionsParams,
-    Station,
-    MatrixDirection,
+    OnRouteStation,
     SimpleRoute,
     GeoJSONLineString,
-    DetailedRoutesResponse, DetailedRoutesRequest, DetailedRoute
+    DetailedRoutesResponse,
+    DetailedRoutesRequest,
+    DetailedRoute,
+    NearbyStationsRequest,
+    NearbyStationsResponse,
+    NearbyStation,
 )
 from src.service import (
     get_route_coordinates,
@@ -26,18 +30,16 @@ from src.service import (
     fetch_on_route_stations,
     assign_segment_ids,
     get_route_length,
-    get_unique_network_ids,
-    fetch_fuel_prices,
-    map_fuel_prices_to_dict,
-    merge_stations_and_prices,
-    get_stations_coordinates_dicts,
-    get_matrix_distances,
-    get_matrix_durations,
-    merge_matrixes,
-    add_total_distances_and_durations,
-    calculate_stations_metrics,
+    calculate_on_route_stations_metrics,
     get_route_duration,
-    get_top_stations_for_segment
+    get_top_on_route_stations,
+    get_polygon,
+    fetch_nearby_stations,
+    get_polygon_wkt,
+    calculate_nearby_stations_metrics,
+    get_top_nearby_stations,
+    fetch_and_merge_fuel_prices,
+    get_and_apply_matrices
 )
 
 router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
@@ -66,38 +68,20 @@ async def get_on_route_stations(
         original_route_wkt, settings.BUFFER_RADIUS_M, session
     )
 
-    stations = TypeAdapter(list[Station]).validate_python(stations_rows)
+    stations = TypeAdapter(list[OnRouteStation]).validate_python(stations_rows)
 
     original_route_length = get_route_length(directions_response)
     assign_segment_ids(stations, original_route_length, settings.SEGMENT_LENGTH_M)
 
-    unique_networks_ids = get_unique_network_ids(stations)
-    fuel_prices = await fetch_fuel_prices(unique_networks_ids, data.fuel_type, session)
-
-    fuel_prices_dict = map_fuel_prices_to_dict(fuel_prices)
-    stations = merge_stations_and_prices(stations, fuel_prices_dict)
+    stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, session)
 
     osrm = OSRMClient(osrm_client)
-    stations_coordinates = get_stations_coordinates_dicts(stations)
-    forward_matrix = await osrm.get_table(
-        data.start.model_dump(), stations_coordinates, MatrixDirection.FORWARD
+    await get_and_apply_matrices(
+        stations, osrm, data.start.model_dump(), data.end.model_dump()
     )
-    forward_distances = get_matrix_distances(forward_matrix)
-    forward_durations = get_matrix_durations(forward_matrix)
-
-    backward_matrix = await osrm.get_table(
-        data.end.model_dump(), stations_coordinates, MatrixDirection.BACKWARD
-    )
-    backward_distances = get_matrix_distances(backward_matrix)
-    backward_durations = get_matrix_durations(backward_matrix)
-
-    distances_list = merge_matrixes(forward_distances, backward_distances)
-    durations_list = merge_matrixes(forward_durations, backward_durations)
-
-    add_total_distances_and_durations(stations, distances_list, durations_list)
 
     original_route_duration = get_route_duration(directions_response)
-    calculate_stations_metrics(
+    calculate_on_route_stations_metrics(
         stations,
         original_route_length,
         original_route_duration,
@@ -106,8 +90,8 @@ async def get_on_route_stations(
         data.income_per_minute,
     )
 
-    top_stations = get_top_stations_for_segment(
-        stations, settings.MAX_STATIONS_PET_NETWORK
+    top_stations = get_top_on_route_stations(
+        stations, settings.ON_ROUTE_MAX_STATIONS_PER_NETWORK
     )
 
     original_route = SimpleRoute(
@@ -159,3 +143,43 @@ async def get_detailed_routes(
     return {
         "routes": routes
     }
+
+
+@router.post(
+    "/nearby",
+    response_model=NearbyStationsResponse,
+    status_code=status.HTTP_200_OK
+)
+async def get_nearby_stations(
+        data: NearbyStationsRequest,
+        session: AsyncSession = Depends(get_db),
+        mapbox_client: AsyncClient = Depends(get_mapbox_client),
+        osrm_client: AsyncClient = Depends(get_osrm_client)
+):
+    mapbox = MapboxClient(mapbox_client)
+    isochrones_response = await mapbox.get_isochrone(data.start.model_dump())
+    polygon = get_polygon(isochrones_response)
+    polygon_wkt = get_polygon_wkt(polygon)
+
+    stations_rows = await fetch_nearby_stations(polygon_wkt, session)
+    stations = TypeAdapter(list[NearbyStation]).validate_python(stations_rows)
+
+    stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, session)
+
+    osrm = OSRMClient(osrm_client)
+    await get_and_apply_matrices(
+        stations, osrm, data.start.model_dump(), data.start.model_dump()
+    )
+
+    calculate_nearby_stations_metrics(
+        stations,
+        data.volume,
+        data.fuel_consumption,
+        data.income_per_minute,
+    )
+
+    top_stations = get_top_nearby_stations(
+        stations, settings.NEARBY_MAX_STATIONS_PER_NETWORK
+    )
+
+    return top_stations
