@@ -1,5 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from math import floor
 
@@ -16,13 +17,16 @@ class PointCoordinates(BaseModel):
     lat: float = Field(..., ge=-90, le=90)
 
 
-class OnRouteStationsRequest(BaseModel):
+class NearbyStationsRequest(BaseModel):
     start: PointCoordinates
-    end: PointCoordinates
     volume: int = Field(..., gt=0)
     fuel_type: str
     fuel_consumption: float = Field(..., gt=0)
     income_per_minute: float = Field(..., ge=0)
+
+
+class OnRouteStationsRequest(NearbyStationsRequest):
+    end: PointCoordinates
 
 
 class GeoJSONLineString(BaseModel):
@@ -35,19 +39,15 @@ class SimpleRoute(BaseModel):
     duration: float = Field(..., gt=0)
 
 
-class Station(BaseModel):
+class BaseStation(BaseModel):
     station_id: int
     coordinates: PointCoordinates
     network_id: int
     network_name: str
-    fraction: float = Field(..., ge=0, le=1)
 
-    segment_id: int | None = None
     price_per_liter: float | None = Field(None, gt=0)
     total_distance_m: float | None = Field(None, gt=0)
     total_duration_s: float | None = Field(None, gt=0)
-    distance_difference_m: float | None = Field(None, gt=0)
-    duration_difference_s: float | None = Field(None, gt=0)
     fuel_price: float | None = Field(None, gt=0)
     total_price: float | None = Field(None, gt=0)
 
@@ -58,23 +58,20 @@ class Station(BaseModel):
         if isinstance(data, dict):
             return data
 
-        return {
+        res = {
             "station_id": data.station_id,
             "coordinates": {
                 "lng": data.lng,
                 "lat": data.lat,
             },
             "network_id": data.network_id,
-            "network_name": data.network_name,
-            "fraction": data.fraction
+            "network_name": data.network_name
         }
 
-    def assign_segment_id(
-            self,
-            route_length_m: float,
-            segment_length_m: float
-    ) -> None:
-        self.segment_id = floor(self.fraction * route_length_m / segment_length_m)
+        if hasattr(data, "fraction"):
+            res["fraction"] = data.fraction
+
+        return res
 
     def add_fuel_price_per_liter(self, price_per_liter: float) -> None:
         self.price_per_liter = price_per_liter
@@ -85,14 +82,39 @@ class Station(BaseModel):
     def add_total_duration(self, duration_s: float) -> None:
         self.total_duration_s = duration_s
 
+    def calculate_fuel_price(self, volume: float) -> None:
+        self.fuel_price = self.price_per_liter * volume
+
+
+class NearbyStation(BaseStation):
+
+    def calculate_total_price(
+            self, fuel_consumption_1km: float, income_per_minute: float
+    ) -> None:
+        self.total_price = (
+                self.fuel_price
+                + fuel_consumption_1km * self.total_distance_m / 1000
+                + income_per_minute * self.total_duration_s / 60
+        )
+
+
+class OnRouteStation(BaseStation):
+    fraction: float = Field(..., ge=0, le=1)
+
+    segment_id: int | None = None
+    distance_difference_m: float | None = Field(None, gt=0)
+    duration_difference_s: float | None = Field(None, gt=0)
+
+    def assign_segment_id(
+            self, route_length_m: float, segment_length_m: float
+    ) -> None:
+        self.segment_id = floor(self.fraction * route_length_m / segment_length_m)
+
     def calculate_distance_difference(self, original_distance_m: float) -> None:
         self.distance_difference_m = self.total_distance_m - original_distance_m
 
     def calculate_duration_difference(self, original_duration_s: float) -> None:
         self.duration_difference_s = self.total_duration_s - original_duration_s
-
-    def calculate_fuel_price(self, volume: float) -> None:
-        self.fuel_price = self.price_per_liter * volume
 
     def calculate_total_price(
             self, fuel_consumption_1km: float, income_per_minute: float
@@ -106,7 +128,11 @@ class Station(BaseModel):
 
 class OnRouteStationsResponse(BaseModel):
     original_route: SimpleRoute
-    stations: list[Station]
+    stations: list[OnRouteStation]
+
+
+class NearbyStationsResponse(BaseModel):
+    stations: list[NearbyStation]
 
 
 class DetailedRoutesRequest(BaseModel):
