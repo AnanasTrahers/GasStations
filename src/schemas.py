@@ -6,6 +6,8 @@ from math import floor
 
 from sqlalchemy.engine.row import Row
 
+from src.utils.logs import Logger
+
 
 class MatrixDirection(str, Enum):
     FORWARD = "forward"
@@ -108,7 +110,11 @@ class OnRouteStation(BaseStation):
     def assign_segment_id(
             self, route_length_m: float, segment_length_m: float
     ) -> None:
-        self.segment_id = floor(self.fraction * route_length_m / segment_length_m)
+        try:
+            self.segment_id = floor(self.fraction * route_length_m / segment_length_m)
+        except ZeroDivisionError:
+            Logger.error("Division by zero. segment_length_m can't be 0")
+            raise
 
     def calculate_distance_difference(self, original_distance_m: float) -> None:
         self.distance_difference_m = self.total_distance_m - original_distance_m
@@ -138,7 +144,7 @@ class NearbyStationsResponse(BaseModel):
 class DetailedRoutesRequest(BaseModel):
     start: PointCoordinates
     end: PointCoordinates
-    stations_coordinates: list[PointCoordinates]
+    stations_coordinates: list[PointCoordinates] = Field(..., max_length=3)
 
 
 class BannerText(BaseModel):

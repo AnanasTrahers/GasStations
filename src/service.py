@@ -7,6 +7,7 @@ from shapely import Geometry
 from shapely.geometry import LineString
 from shapely.geometry.polygon import Polygon
 from sqlalchemy.engine.row import Row
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql.expression import select, func, cast
 from geoalchemy2 import Geography, WKTElement
@@ -15,40 +16,73 @@ from src.clients.osrm import OSRMClient
 from src.config import settings
 from src.models import GasStation, FuelPrice, Network
 from src.schemas import OnRouteStation, NearbyStation, BaseStation, MatrixDirection
+from src.utils.logs import Logger
 
 StationType = TypeVar('StationType', bound=BaseStation)
 
 
 def get_route_coordinates(directions_json: dict) -> list[list[float]]:
-    return directions_json["routes"][0]["geometry"]["coordinates"]
+    try:
+        return directions_json["routes"][0]["geometry"]["coordinates"]
+    except (KeyError, IndexError, TypeError):
+        Logger.error("Failed to get route coordinates from Directions JSON")
+        raise
 
 
 def get_route_length(directions_json: dict) -> float:
-    return directions_json["routes"][0]["distance"]
+    try:
+        return directions_json["routes"][0]["distance"]
+    except (KeyError, IndexError, TypeError):
+        Logger.error("Failed to get route length from Directions JSON")
+        raise
 
 
 def get_route_duration(directions_json: dict) -> float:
-    return directions_json["routes"][0]["duration"]
+    try:
+        return directions_json["routes"][0]["duration"]
+    except (KeyError, IndexError, TypeError):
+        Logger.error("Failed to get route duration from Directions JSON")
+        raise
 
 
-def get_matrix_distances(matrix_json: dict) -> list[float] | list[list[float]]:
-    return matrix_json["distances"]
+def get_matrix_distances(matrix_json: dict) -> list[list[float]]:
+    try:
+        return matrix_json["distances"]
+    except (KeyError, IndexError, TypeError):
+        Logger.error("Failed to get list of distances from Matrix JSON")
+        raise
 
 
 def get_matrix_durations(matrix_json: dict) -> list[float] | list[list[float]]:
-    return matrix_json["durations"]
+    try:
+        return matrix_json["durations"]
+    except (KeyError, IndexError, TypeError):
+        Logger.error("Failed to get list of durations from Matrix JSON")
+        raise
 
 
 def get_polygon(isochrones_json: dict) -> list[list[float]]:
-    return isochrones_json["features"][0]["geometry"]["coordinates"]
+    try:
+        return isochrones_json["features"][0]["geometry"]["coordinates"]
+    except (KeyError, IndexError, TypeError):
+        Logger.error("Failed to get polygon from Isochrones JSON")
+        raise
 
 
 def get_route_wkt(coordinates_list: list[list[float]]) -> WKTElement:
-    return WKTElement(LineString(coordinates_list).wkt, srid=4326)
+    try:
+        return WKTElement(LineString(coordinates_list).wkt, srid=4326)
+    except ValueError:
+        Logger.error("Failed to create LineString")
+        raise
 
 
 def get_polygon_wkt(coordinates_list: list[list[float]]) -> WKTElement:
-    return WKTElement(Polygon(coordinates_list).wkt, srid=4326)
+    try:
+        return WKTElement(Polygon(coordinates_list).wkt, srid=4326)
+    except ValueError:
+        Logger.error("Failed to create Polygon")
+        raise
 
 
 async def fetch_on_route_stations(
@@ -77,9 +111,13 @@ async def fetch_on_route_stations(
             buffer_radius
         ))
     )
-    result = await session.execute(stmt)
-
-    return result.all()
+    Logger.info("Fetching on-route stations...")
+    try:
+        result = await session.execute(stmt)
+        return result.all()
+    except SQLAlchemyError:
+        Logger.error("DB query failed while fetching on-route stations")
+        raise
 
 
 def assign_segment_ids(
@@ -87,8 +125,10 @@ def assign_segment_ids(
         route_length_m: float,
         segment_length_m: float
 ) -> None:
+    Logger.info("Assigning segment ids...")
     for station in stations:
         station.assign_segment_id(route_length_m, segment_length_m)
+    Logger.info(f"Assigned segment ids to {len(stations)} stations")
 
 
 def get_unique_network_ids(stations: list[StationType]) -> set[int]:
@@ -117,9 +157,13 @@ async def fetch_fuel_prices(
         )
     )
 
-    result = await session.execute(stmt)
-
-    return result.all()
+    Logger.info("Fetching fuel prices...")
+    try:
+        result = await session.execute(stmt)
+        return result.all()
+    except SQLAlchemyError:
+        Logger.error("DB query failed while fetching fuel prices")
+        raise
 
 
 def map_fuel_prices_to_dict(rows: Sequence[Row]) -> dict:
@@ -134,12 +178,14 @@ def merge_stations_and_prices(
 ) -> list[StationType]:
     filtered_stations = []
 
+    Logger.info("Merging stations and fuel prices...")
     for station in stations:
         fuel_price = fuel_prices.get(station.network_id)
         if fuel_price is not None:
             station.add_fuel_price_per_liter(fuel_price)
             filtered_stations.append(station)
 
+    Logger.info(f"Merged. Kept {len(filtered_stations)} stations out of {len(stations)}")
     return filtered_stations
 
 
@@ -155,18 +201,27 @@ def merge_matrices(
 ) -> list[float]:
     merged_list = []
 
-    for i in range(len(backward_matrix)):
-        merged_list.append(forward_matrix[0][i] + backward_matrix[i][0])
-
-    return merged_list
+    Logger.info("Merging forward and backward matrices...")
+    try:
+        for i in range(len(backward_matrix)):
+            merged_list.append(forward_matrix[0][i] + backward_matrix[i][0])
+        return merged_list
+    except IndexError:
+        Logger.error("Mismatched list length: matrices don't align")
+        raise
 
 
 def add_total_distances_and_durations(
         stations: list[StationType], distances_m: list, durations_s: list
 ) -> None:
-    for station, distance, duration in zip(stations, distances_m, durations_s):
-        station.add_total_distance(distance)
-        station.add_total_duration(duration)
+    Logger.info("Adding total distances and durations to stations...")
+    try:
+        for station, distance, duration in zip(stations, distances_m, durations_s, strict=True):
+            station.add_total_distance(distance)
+            station.add_total_duration(duration)
+    except ValueError:
+        Logger.error("Mismatched list length: stations, distances and durations don't align")
+        raise
 
 
 def calculate_on_route_stations_metrics(
@@ -177,6 +232,9 @@ def calculate_on_route_stations_metrics(
         fuel_consumption_1km: float,
         income_per_minute: float,
 ) -> None:
+    Logger.info(
+        "Calculating distance and duration differences, and fuel prices for on-route stations..."
+    )
     for station in stations:
         station.calculate_distance_difference(original_distance_m)
         station.calculate_duration_difference(original_duration_s)
@@ -190,6 +248,7 @@ def calculate_nearby_stations_metrics(
         fuel_consumption_1km: float,
         income_per_minute: float,
 ) -> None:
+    Logger.info("Calculating fuel prices for nearby stations...")
     for station in stations:
         station.calculate_fuel_price(volume)
         station.calculate_total_price(fuel_consumption_1km, income_per_minute)
@@ -202,9 +261,13 @@ def get_top_on_route_stations(
     top_stations = []
     stations.sort(key=lambda x: (x.network_id, x.segment_id, x.total_price))
 
+    Logger.info(
+        f"Filtering top {max_per_network} on-route stations for each network for each segment..."
+    )
     for key, group in groupby(stations, key=lambda x: (x.network_id, x.segment_id)):
         top_stations.extend(islice(group, max_per_network))
 
+    Logger.info(f"Filtered. Kept {len(top_stations)} stations out of {len(stations)}")
     return sorted(top_stations, key=lambda x: x.total_price)
 
 
@@ -215,9 +278,13 @@ def get_top_nearby_stations(
     top_stations = []
     stations.sort(key=lambda x: (x.network_id, x.total_price))
 
+    Logger.info(
+        f"Filtering top {max_per_network} nearby stations..."
+    )
     for key, group in groupby(stations, key=lambda x: x.network_id):
         top_stations.extend(islice(group, max_per_network))
 
+    Logger.info(f"Filtered. Kept {len(top_stations)} stations out of {len(stations)}")
     return sorted(top_stations, key=lambda x: x.total_price)
 
 
@@ -240,9 +307,14 @@ async def fetch_nearby_stations(
         .join(Network, GasStation.network_id == Network.id)
         .where(func.ST_Intersects(GasStation.geog, polygon_geog))
     )
-    result = await session.execute(stmt)
 
-    return result.all()
+    Logger.info("Fetching nearby stations...")
+    try:
+        result = await session.execute(stmt)
+        return result.all()
+    except SQLAlchemyError:
+        Logger.error("DB query failed while fetching nearby stations")
+        raise
 
 
 async def fetch_and_merge_fuel_prices(

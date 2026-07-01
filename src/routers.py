@@ -41,6 +41,7 @@ from src.service import (
     fetch_and_merge_fuel_prices,
     get_and_apply_matrices
 )
+from src.utils.logs import Logger
 
 router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
 
@@ -56,6 +57,8 @@ async def get_on_route_stations(
         mapbox_client: AsyncClient = Depends(get_mapbox_client),
         osrm_client: AsyncClient = Depends(get_osrm_client)
 ):
+    Logger.info("Starting on-route optimization request...")
+
     mapbox = MapboxClient(mapbox_client)
     directions_params = DirectionsParams()
     directions_response = await mapbox.get_direction(
@@ -102,6 +105,9 @@ async def get_on_route_stations(
         duration=original_route_duration,
     )
 
+    Logger.info(
+        f"Completed on-route optimization. Returning {len(stations)} stations"
+    )
     return {
         "original_route": original_route,
         "stations": top_stations
@@ -117,6 +123,10 @@ async def get_detailed_routes(
         coordinates: DetailedRoutesRequest,
         mapbox_client: AsyncClient = Depends(get_mapbox_client),
 ):
+    Logger.info(
+        f"Generating detailed routes for {len(coordinates.stations_coordinates)} stations..."
+    )
+
     mapbox = MapboxClient(mapbox_client)
     directions_params = DirectionsParams()
     directions_params.setup_full_request()
@@ -140,6 +150,7 @@ async def get_detailed_routes(
         for response in responses
     ]
 
+    Logger.info("Completed detailed routes generation")
     return {
         "routes": routes
     }
@@ -156,6 +167,8 @@ async def get_nearby_stations(
         mapbox_client: AsyncClient = Depends(get_mapbox_client),
         osrm_client: AsyncClient = Depends(get_osrm_client)
 ):
+    Logger.info("Starting nearby optimization request...")
+
     mapbox = MapboxClient(mapbox_client)
     isochrones_response = await mapbox.get_isochrone(data.start.model_dump())
     polygon = get_polygon(isochrones_response)
@@ -182,4 +195,7 @@ async def get_nearby_stations(
         stations, settings.NEARBY_MAX_STATIONS_PER_NETWORK
     )
 
+    Logger.info(
+        f"Completed nearby optimization. Returning {len(stations)} stations"
+    )
     return top_stations

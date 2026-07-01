@@ -1,9 +1,10 @@
 import httpx
 
 from src.schemas import MatrixDirection
+from src.utils.logs import LoggerMixin
 
 
-class BaseRoutingClient:
+class BaseRoutingClient(LoggerMixin):
     def __init__(self, client: httpx.AsyncClient):
         self.client = client
 
@@ -37,9 +38,20 @@ class BaseRoutingClient:
         return params
 
     async def _execute_get(self, url: str, params: dict) -> dict:
-        result = await self.client.get(url, params=params)
-        result.raise_for_status()
-        return result.json()
+        self.log_info(f"Executing GET request to {self.client.base_url}{url}")
+        try:
+            result = await self.client.get(url, params=params)
+            result.raise_for_status()
+            return result.json()
+        except httpx.HTTPStatusError as e:
+            self.log_error(f"API rejected request with error status {e.response.status_code}")
+            raise
+        except httpx.RequestError:
+            self.log_error("Network connection failed")
+            raise
+        except ValueError:
+            self.log_error("Failed to decode JSON from response")
+            raise
 
     async def _call_matrix(
             self,
