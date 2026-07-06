@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql.expression import select, func, cast
 
-from src.config import settings
+from src.config import business_settings
 from src.models import GasStation, FuelPrice, Network
 from src.utils.logs import Logger
 
@@ -89,7 +89,7 @@ class PricesRepository:
             fuel_type: str
     ) -> Sequence[Row]:
         safe_date = (datetime.now(timezone.utc)
-                     - timedelta(days=settings.FUEL_PRICE_SAFE_DAYS))
+                     - timedelta(days=business_settings.FUEL_PRICE_SAFE_DAYS))
 
         stmt = (
             select(FuelPrice.network_id, FuelPrice.price)

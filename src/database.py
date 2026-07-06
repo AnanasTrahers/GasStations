@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.schema import MetaData
 
-from src.config import settings
+from src.config import project_settings
 
 metadata = MetaData(schema="app")
 
@@ -12,7 +12,7 @@ class Base(DeclarativeBase):
 
 
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    project_settings.DATABASE_URL,
     echo=True,
     connect_args={
         "server_settings": {"search_path": "app, public, topology"}

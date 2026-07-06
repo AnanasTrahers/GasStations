@@ -6,7 +6,7 @@ from pydantic import TypeAdapter
 
 from src.clients.mapbox import MapboxHTTPXClient
 from src.clients.osrm import OSRMHTTPXClient
-from src.config import settings
+from src.config import business_settings
 from src.dependencies import get_httpx_client, get_db_repo
 from src.repositories import DBRepository
 from src.schemas import (
@@ -65,13 +65,13 @@ async def get_on_route_stations(
     original_route_coordinates = get_route_coordinates(directions_response)
     original_route_wkt = get_route_wkt(original_route_coordinates)
     stations_rows = await db_repo.stations.fetch_on_route(
-        original_route_wkt, settings.BUFFER_RADIUS_M
+        original_route_wkt, business_settings.BUFFER_RADIUS_M
     )
 
     stations = TypeAdapter(list[OnRouteStation]).validate_python(stations_rows)
 
     original_route_length = get_route_length(directions_response)
-    assign_segment_ids(stations, original_route_length, settings.SEGMENT_LENGTH_M)
+    assign_segment_ids(stations, original_route_length, business_settings.SEGMENT_LENGTH_M)
 
     stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, db_repo)
 
@@ -91,7 +91,7 @@ async def get_on_route_stations(
     )
 
     top_stations = get_top_on_route_stations(
-        stations, settings.ON_ROUTE_MAX_STATIONS_PER_NETWORK
+        stations, business_settings.ON_ROUTE_MAX_STATIONS_PER_NETWORK
     )
 
     original_route = SimpleRoute(
@@ -188,7 +188,7 @@ async def get_nearby_stations(
     )
 
     top_stations = get_top_nearby_stations(
-        stations, settings.NEARBY_MAX_STATIONS_PER_NETWORK
+        stations, business_settings.NEARBY_MAX_STATIONS_PER_NETWORK
     )
 
     Logger.info(

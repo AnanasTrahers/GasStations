@@ -3,7 +3,7 @@ from dataclasses import asdict
 import httpx
 
 from src.clients.base import BaseRoutingHTTPXClient
-from src.config import settings
+from src.config import project_settings, business_settings
 from src.schemas import DirectionsParams, MatrixDirection
 
 
@@ -14,7 +14,7 @@ class MapboxHTTPXClient(BaseRoutingHTTPXClient):
 
     def __init__(self, client: httpx.AsyncClient):
         super().__init__(client)
-        self.api_key = settings.MAPBOX_API_KEY
+        self.api_key = project_settings.MAPBOX_API_KEY
 
     @staticmethod
     def _build_approaches_string(n: int) -> str:
@@ -55,7 +55,7 @@ class MapboxHTTPXClient(BaseRoutingHTTPXClient):
 
         params = {
             "access_token": self.api_key,
-            "contours_minutes": settings.ISOCHRONE_CONTOURS_MINUTES,
+            "contours_minutes": business_settings.ISOCHRONE_CONTOURS_MINUTES,
             "polygons": "true",
             "generalize": 50,
         }
