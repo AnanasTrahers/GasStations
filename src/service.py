@@ -1,57 +1,15 @@
-from collections.abc import Sequence
-from datetime import datetime, timezone, timedelta
 from itertools import groupby, islice
 from typing import TypeVar
 
-from shapely import Geometry
-from sqlalchemy.engine.row import Row
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy.sql.expression import select, func, cast
-from geoalchemy2 import Geography, WKTElement
+from sqlalchemy.engine.row import Row, Sequence
 
 from src.clients.osrm import OSRMHTTPXClient
-from src.config import settings
-from src.models import GasStation, FuelPrice, Network
+from src.repositories import DBRepository
 from src.schemas import OnRouteStation, NearbyStation, BaseStation, MatrixDirection
 from src.utils.logs import Logger
+from src.utils.response_helpers import get_matrix_distances, get_matrix_durations
 
 StationType = TypeVar('StationType', bound=BaseStation)
-
-
-async def fetch_on_route_stations(
-        route_wkt: WKTElement,
-        buffer_radius: int,
-        session: AsyncSession
-) -> Sequence[Row]:
-    route_geog = cast(route_wkt, Geography(srid=4326))
-    route_geom = cast(route_wkt, Geometry(srid=4326))
-    station_geom = cast(GasStation.geog, Geometry(srid=4326))
-
-    stmt = (
-        select(
-            GasStation.id.label("station_id"),
-            GasStation.network_id,
-            Network.name.label("network_name"),
-            func.ST_X(station_geom).label("lng"),
-            func.ST_Y(station_geom).label("lat"),
-            func.ST_LineLocatePoint(route_geom, station_geom).label("fraction")
-        )
-        .select_from(GasStation)
-        .join(Network, GasStation.network_id == Network.id)
-        .where(func.ST_DWithin(
-            route_geog,
-            GasStation.geog,
-            buffer_radius
-        ))
-    )
-    Logger.info("Fetching on-route stations...")
-    try:
-        result = await session.execute(stmt)
-        return result.all()
-    except SQLAlchemyError:
-        Logger.error("DB query failed while fetching on-route stations")
-        raise
 
 
 def assign_segment_ids(
@@ -67,37 +25,6 @@ def assign_segment_ids(
 
 def get_unique_network_ids(stations: list[StationType]) -> set[int]:
     return {station.network_id for station in stations}
-
-
-async def fetch_fuel_prices(
-        network_ids: set[int],
-        fuel_type: str,
-        session: AsyncSession
-) -> Sequence[Row]:
-    safe_date = (datetime.now(timezone.utc)
-                 - timedelta(days=settings.FUEL_PRICE_SAFE_DAYS))
-
-    stmt = (
-        select(FuelPrice.network_id, FuelPrice.price)
-        .where(
-            FuelPrice.fuel_type == fuel_type,
-            FuelPrice.network_id.in_(network_ids),
-            FuelPrice.created_at >= safe_date
-        )
-        .distinct(FuelPrice.network_id)
-        .order_by(
-            FuelPrice.network_id,
-            FuelPrice.created_at.desc()
-        )
-    )
-
-    Logger.info("Fetching fuel prices...")
-    try:
-        result = await session.execute(stmt)
-        return result.all()
-    except SQLAlchemyError:
-        Logger.error("DB query failed while fetching fuel prices")
-        raise
 
 
 def map_fuel_prices_to_dict(rows: Sequence[Row]) -> dict:
@@ -222,42 +149,13 @@ def get_top_nearby_stations(
     return sorted(top_stations, key=lambda x: x.total_price)
 
 
-async def fetch_nearby_stations(
-        polygon_wkt: WKTElement,
-        session: AsyncSession
-) -> Sequence[Row]:
-    polygon_geog = cast(polygon_wkt, Geography(srid=4326))
-    station_geom = cast(GasStation.geog, Geometry(srid=4326))
-
-    stmt = (
-        select(
-            GasStation.id.label("station_id"),
-            GasStation.network_id,
-            Network.name.label("network_name"),
-            func.ST_X(station_geom).label("lng"),
-            func.ST_Y(station_geom).label("lat")
-        )
-        .select_from(GasStation)
-        .join(Network, GasStation.network_id == Network.id)
-        .where(func.ST_Intersects(GasStation.geog, polygon_geog))
-    )
-
-    Logger.info("Fetching nearby stations...")
-    try:
-        result = await session.execute(stmt)
-        return result.all()
-    except SQLAlchemyError:
-        Logger.error("DB query failed while fetching nearby stations")
-        raise
-
-
 async def fetch_and_merge_fuel_prices(
         stations: list[StationType],
         fuel_type: str,
-        session: AsyncSession
+        db_repo: DBRepository
 ):
     unique_networks_ids = get_unique_network_ids(stations)
-    fuel_prices = await fetch_fuel_prices(unique_networks_ids, fuel_type, session)
+    fuel_prices = await db_repo.prices.fetch_for_networks(unique_networks_ids, fuel_type)
 
     fuel_prices_dict = map_fuel_prices_to_dict(fuel_prices)
 

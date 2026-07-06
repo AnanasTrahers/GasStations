@@ -2,14 +2,13 @@ import asyncio
 
 from fastapi import APIRouter, status, Depends
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio.session import AsyncSession
 from pydantic import TypeAdapter
 
 from src.clients.mapbox import MapboxHTTPXClient
 from src.clients.osrm import OSRMHTTPXClient
 from src.config import settings
-from src.database import get_db
-from src.dependencies import get_httpx_client
+from src.dependencies import get_httpx_client, get_db_repo
+from src.repositories import DBRepository
 from src.schemas import (
     OnRouteStationsResponse,
     OnRouteStationsRequest,
@@ -25,16 +24,15 @@ from src.schemas import (
     NearbyStation,
 )
 from src.service import (
-    fetch_on_route_stations,
     assign_segment_ids,
     calculate_on_route_stations_metrics,
     get_top_on_route_stations,
-    fetch_nearby_stations,
     calculate_nearby_stations_metrics,
     get_top_nearby_stations,
     fetch_and_merge_fuel_prices,
     get_and_apply_matrices
 )
+from src.utils.logs import Logger
 from src.utils.response_helpers import (
     get_route_coordinates,
     get_route_length,
@@ -42,7 +40,6 @@ from src.utils.response_helpers import (
     get_polygon
 )
 from src.utils.wkt_builders import get_route_wkt, get_polygon_wkt
-from src.utils.logs import Logger
 
 router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
 
@@ -54,7 +51,7 @@ router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
 )
 async def get_on_route_stations(
         data: OnRouteStationsRequest,
-        session: AsyncSession = Depends(get_db),
+        db_repo: DBRepository = Depends(get_db_repo),
         httpx_client: AsyncClient = Depends(get_httpx_client)
 ):
     Logger.info("Starting on-route optimization request...")
@@ -67,8 +64,8 @@ async def get_on_route_stations(
 
     original_route_coordinates = get_route_coordinates(directions_response)
     original_route_wkt = get_route_wkt(original_route_coordinates)
-    stations_rows = await fetch_on_route_stations(
-        original_route_wkt, settings.BUFFER_RADIUS_M, session
+    stations_rows = await db_repo.stations.fetch_on_route(
+        original_route_wkt, settings.BUFFER_RADIUS_M
     )
 
     stations = TypeAdapter(list[OnRouteStation]).validate_python(stations_rows)
@@ -76,7 +73,7 @@ async def get_on_route_stations(
     original_route_length = get_route_length(directions_response)
     assign_segment_ids(stations, original_route_length, settings.SEGMENT_LENGTH_M)
 
-    stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, session)
+    stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, db_repo)
 
     osrm = OSRMHTTPXClient(httpx_client)
     await get_and_apply_matrices(
@@ -163,7 +160,7 @@ async def get_detailed_routes(
 )
 async def get_nearby_stations(
         data: NearbyStationsRequest,
-        session: AsyncSession = Depends(get_db),
+        db_repo: DBRepository = Depends(get_db_repo),
         httpx_client: AsyncClient = Depends(get_httpx_client)
 ):
     Logger.info("Starting nearby optimization request...")
@@ -173,10 +170,10 @@ async def get_nearby_stations(
     polygon = get_polygon(isochrones_response)
     polygon_wkt = get_polygon_wkt(polygon)
 
-    stations_rows = await fetch_nearby_stations(polygon_wkt, session)
+    stations_rows = await db_repo.stations.fetch_nearby(polygon_wkt)
     stations = TypeAdapter(list[NearbyStation]).validate_python(stations_rows)
 
-    stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, session)
+    stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, db_repo)
 
     osrm = OSRMHTTPXClient(httpx_client)
     await get_and_apply_matrices(

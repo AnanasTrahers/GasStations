@@ -1,9 +1,8 @@
-from enum import Enum
 from dataclasses import dataclass
-
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from enum import Enum
 from math import floor
 
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy.engine.row import Row
 
 from src.utils.logs import Logger

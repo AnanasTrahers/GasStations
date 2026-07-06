@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
+
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
-import httpx
 
 from src import routers
 from src.api.middleware import LogIdMiddleware

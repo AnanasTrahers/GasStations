@@ -1,6 +1,7 @@
+from geoalchemy2 import WKTElement
 from shapely.geometry import LineString
 from shapely.geometry.polygon import Polygon
-from geoalchemy2 import WKTElement
+
 from src.utils.logs import Logger
 
 

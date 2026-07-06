@@ -1,5 +1,6 @@
-from pathlib import Path
 from contextvars import ContextVar
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

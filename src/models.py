@@ -2,10 +2,10 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy.orm import Mapped, relationship, mapped_column
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy import String, func, ForeignKey, Numeric, DateTime
 from geoalchemy2 import Geography, WKBElement
+from sqlalchemy import String, func, ForeignKey, Numeric, DateTime
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from src.database import Base
 
