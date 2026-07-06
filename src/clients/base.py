@@ -4,7 +4,7 @@ from src.schemas import MatrixDirection
 from src.utils.logs import LoggerMixin
 
 
-class BaseRoutingClient(LoggerMixin):
+class BaseRoutingHTTPXClient(LoggerMixin):
     def __init__(self, client: httpx.AsyncClient):
         self.client = client
 
@@ -38,7 +38,7 @@ class BaseRoutingClient(LoggerMixin):
         return params
 
     async def _execute_get(self, url: str, params: dict) -> dict:
-        self.log_info(f"Executing GET request to {self.client.base_url}{url}")
+        self.log_info(f"Executing GET request to {url}")
         try:
             result = await self.client.get(url, params=params)
             result.raise_for_status()

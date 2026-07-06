@@ -5,11 +5,11 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from pydantic import TypeAdapter
 
-from src.clients.mapbox import MapboxClient
-from src.clients.osrm import OSRMClient
+from src.clients.mapbox import MapboxHTTPXClient
+from src.clients.osrm import OSRMHTTPXClient
 from src.config import settings
 from src.database import get_db
-from src.dependencies import get_mapbox_client, get_osrm_client
+from src.dependencies import get_httpx_client
 from src.schemas import (
     OnRouteStationsResponse,
     OnRouteStationsRequest,
@@ -54,12 +54,11 @@ router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
 async def get_on_route_stations(
         data: OnRouteStationsRequest,
         session: AsyncSession = Depends(get_db),
-        mapbox_client: AsyncClient = Depends(get_mapbox_client),
-        osrm_client: AsyncClient = Depends(get_osrm_client)
+        httpx_client: AsyncClient = Depends(get_httpx_client)
 ):
     Logger.info("Starting on-route optimization request...")
 
-    mapbox = MapboxClient(mapbox_client)
+    mapbox = MapboxHTTPXClient(httpx_client)
     directions_params = DirectionsParams()
     directions_response = await mapbox.get_direction(
         [data.start.model_dump(), data.end.model_dump()], directions_params
@@ -78,7 +77,7 @@ async def get_on_route_stations(
 
     stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, session)
 
-    osrm = OSRMClient(osrm_client)
+    osrm = OSRMHTTPXClient(httpx_client)
     await get_and_apply_matrices(
         stations, osrm, data.start.model_dump(), data.end.model_dump()
     )
@@ -121,13 +120,13 @@ async def get_on_route_stations(
 )
 async def get_detailed_routes(
         coordinates: DetailedRoutesRequest,
-        mapbox_client: AsyncClient = Depends(get_mapbox_client),
+        httpx_client: AsyncClient = Depends(get_httpx_client),
 ):
     Logger.info(
         f"Generating detailed routes for {len(coordinates.stations_coordinates)} stations..."
     )
 
-    mapbox = MapboxClient(mapbox_client)
+    mapbox = MapboxHTTPXClient(httpx_client)
     directions_params = DirectionsParams()
     directions_params.setup_full_request()
 
@@ -164,12 +163,11 @@ async def get_detailed_routes(
 async def get_nearby_stations(
         data: NearbyStationsRequest,
         session: AsyncSession = Depends(get_db),
-        mapbox_client: AsyncClient = Depends(get_mapbox_client),
-        osrm_client: AsyncClient = Depends(get_osrm_client)
+        httpx_client: AsyncClient = Depends(get_httpx_client)
 ):
     Logger.info("Starting nearby optimization request...")
 
-    mapbox = MapboxClient(mapbox_client)
+    mapbox = MapboxHTTPXClient(httpx_client)
     isochrones_response = await mapbox.get_isochrone(data.start.model_dump())
     polygon = get_polygon(isochrones_response)
     polygon_wkt = get_polygon_wkt(polygon)
@@ -179,7 +177,7 @@ async def get_nearby_stations(
 
     stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, session)
 
-    osrm = OSRMClient(osrm_client)
+    osrm = OSRMHTTPXClient(httpx_client)
     await get_and_apply_matrices(
         stations, osrm, data.start.model_dump(), data.start.model_dump()
     )

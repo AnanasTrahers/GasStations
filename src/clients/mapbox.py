@@ -2,18 +2,19 @@ from dataclasses import asdict
 
 import httpx
 
-from src.clients.base import BaseRoutingClient
+from src.clients.base import BaseRoutingHTTPXClient
 from src.config import settings
 from src.schemas import DirectionsParams, MatrixDirection
 
 
-class MapboxClient(BaseRoutingClient):
+class MapboxHTTPXClient(BaseRoutingHTTPXClient):
+    directions_endpoint = "https://api.mapbox.com/directions/v5/mapbox/driving-traffic/"
+    matrix_endpoint = "https://api.mapbox.com/directions-matrix/v1/mapbox/driving-traffic/"
+    isochrone_endpoint = "https://api.mapbox.com/isochrone/v1/mapbox/driving-traffic/"
+
     def __init__(self, client: httpx.AsyncClient):
         super().__init__(client)
         self.api_key = settings.MAPBOX_API_KEY
-        self.directions_endpoint = settings.MAPBOX_DIRECTIONS_ENDPOINT
-        self.matrix_endpoint = settings.MAPBOX_MATRIX_ENDPOINT
-        self.isochrone_endpoint = settings.MAPBOX_ISOCHRONE_ENDPOINT
 
     @staticmethod
     def _build_approaches_string(n: int) -> str:

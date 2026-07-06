@@ -23,4 +23,4 @@ COPY . /app
 RUN if [ -f uv.lock ]; then uv sync --frozen; else uv sync; fi
 
 # Set default execution command
-CMD ["uv", "run", "python", "-m", "src.main"]
+CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

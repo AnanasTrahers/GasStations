@@ -6,21 +6,17 @@ import httpx
 
 from src import routers
 from src.api.middleware import LogIdMiddleware
-from src.config import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    mapbox_client = httpx.AsyncClient(base_url=settings.MAPBOX_BASE_URL)
-    osrm_client = httpx.AsyncClient(base_url=settings.OSRM_BASE_URL)
+    httpx_client = httpx.AsyncClient()
 
     yield {
-        "mapbox_client": mapbox_client,
-        "osrm_client": osrm_client
+        "httpx_client": httpx_client,
     }
 
-    await mapbox_client.aclose()
-    await osrm_client.aclose()
+    await httpx_client.aclose()
 
 
 app = FastAPI(lifespan=lifespan)
