@@ -1,10 +1,10 @@
 import httpx
 
-from src.clients.base import BaseRoutingHTTPXClient
+from src.clients.base import BaseRoutingClient
 from src.schemas import MatrixDirection
 
 
-class OSRMHTTPXClient(BaseRoutingHTTPXClient):
+class OsrmClient(BaseRoutingClient):
     table_endpoint = "http://osrm_engine:5000/table/v1/driving/"
 
     def __init__(self, client: httpx.AsyncClient):

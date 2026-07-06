@@ -2,12 +2,12 @@ from dataclasses import asdict
 
 import httpx
 
-from src.clients.base import BaseRoutingHTTPXClient
+from src.clients.base import BaseRoutingClient
 from src.config import project_settings, business_settings
 from src.schemas import DirectionsParams, MatrixDirection
 
 
-class MapboxHTTPXClient(BaseRoutingHTTPXClient):
+class MapboxClient(BaseRoutingClient):
     directions_endpoint = "https://api.mapbox.com/directions/v5/mapbox/driving-traffic/"
     matrix_endpoint = "https://api.mapbox.com/directions-matrix/v1/mapbox/driving-traffic/"
     isochrone_endpoint = "https://api.mapbox.com/isochrone/v1/mapbox/driving-traffic/"

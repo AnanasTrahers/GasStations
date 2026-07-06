@@ -4,7 +4,7 @@ from src.schemas import MatrixDirection
 from src.utils.logs import LoggerMixin
 
 
-class BaseRoutingHTTPXClient(LoggerMixin):
+class BaseRoutingClient(LoggerMixin):
     def __init__(self, client: httpx.AsyncClient):
         self.client = client
 

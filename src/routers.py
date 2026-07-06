@@ -4,8 +4,8 @@ from fastapi import APIRouter, status, Depends
 from httpx import AsyncClient
 from pydantic import TypeAdapter
 
-from src.clients.mapbox import MapboxHTTPXClient
-from src.clients.osrm import OSRMHTTPXClient
+from src.clients.mapbox import MapboxClient
+from src.clients.osrm import OsrmClient
 from src.config import business_settings
 from src.dependencies import get_httpx_client, get_db_repo
 from src.repositories import DBRepository
@@ -14,8 +14,6 @@ from src.schemas import (
     OnRouteStationsRequest,
     DirectionsParams,
     OnRouteStation,
-    SimpleRoute,
-    GeoJSONLineString,
     DetailedRoutesResponse,
     DetailedRoutesRequest,
     DetailedRoute,
@@ -30,16 +28,13 @@ from src.service import (
     calculate_nearby_stations_metrics,
     get_top_nearby_stations,
     fetch_and_merge_fuel_prices,
-    get_and_apply_matrices
+    get_and_apply_matrices,
+    fetch_and_build_simple_route,
+    fetch_and_build_polygon_wkt
 )
 from src.utils.logs import Logger
-from src.utils.response_helpers import (
-    get_route_coordinates,
-    get_route_length,
-    get_route_duration,
-    get_polygon
-)
-from src.utils.wkt_builders import get_route_wkt, get_polygon_wkt
+
+from src.utils.wkt_builders import get_route_wkt
 
 router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
 
@@ -56,55 +51,39 @@ async def get_on_route_stations(
 ):
     Logger.info("Starting on-route optimization request...")
 
-    mapbox = MapboxHTTPXClient(httpx_client)
-    directions_params = DirectionsParams()
-    directions_response = await mapbox.get_direction(
-        [data.start.model_dump(), data.end.model_dump()], directions_params
-    )
+    # 1. Fetch Route (Memory optimized)
+    mapbox = MapboxClient(httpx_client)
+    original_route = await fetch_and_build_simple_route(mapbox, data.start, data.end)
 
-    original_route_coordinates = get_route_coordinates(directions_response)
-    original_route_wkt = get_route_wkt(original_route_coordinates)
+    # 2. Fetch Stations
+    route_wkt = get_route_wkt(original_route.geometry.coordinates)
     stations_rows = await db_repo.stations.fetch_on_route(
-        original_route_wkt, business_settings.BUFFER_RADIUS_M
+        route_wkt, business_settings.BUFFER_RADIUS_M
     )
-
     stations = TypeAdapter(list[OnRouteStation]).validate_python(stations_rows)
+    assign_segment_ids(stations, original_route.distance, business_settings.SEGMENT_LENGTH_M)
 
-    original_route_length = get_route_length(directions_response)
-    assign_segment_ids(stations, original_route_length, business_settings.SEGMENT_LENGTH_M)
-
-    stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, db_repo)
-
-    osrm = OSRMHTTPXClient(httpx_client)
-    await get_and_apply_matrices(
-        stations, osrm, data.start.model_dump(), data.end.model_dump()
+    # 3. Parallelize Prices & OSRM Matrices
+    osrm = OsrmClient(httpx_client)
+    await asyncio.gather(
+        fetch_and_merge_fuel_prices(stations, data.fuel_type, db_repo),
+        get_and_apply_matrices(stations, osrm, data.start.model_dump(), data.end.model_dump())
     )
 
-    original_route_duration = get_route_duration(directions_response)
+    # 4. Finalize Metrics
     calculate_on_route_stations_metrics(
         stations,
-        original_route_length,
-        original_route_duration,
+        original_route.distance,
+        original_route.duration,
         data.volume,
         data.fuel_consumption,
         data.income_per_minute,
     )
-
     top_stations = get_top_on_route_stations(
         stations, business_settings.ON_ROUTE_MAX_STATIONS_PER_NETWORK
     )
 
-    original_route = SimpleRoute(
-        geometry=GeoJSONLineString(
-            coordinates=original_route_coordinates
-        ),
-        distance=original_route_length,
-        duration=original_route_duration,
-    )
-
-    Logger.info(
-        f"Completed on-route optimization. Returning {len(stations)} stations"
-    )
+    Logger.info(f"Completed on-route optimization. Returning {len(top_stations)} stations")
     return {
         "original_route": original_route,
         "stations": top_stations
@@ -124,7 +103,7 @@ async def get_detailed_routes(
         f"Generating detailed routes for {len(coordinates.stations_coordinates)} stations..."
     )
 
-    mapbox = MapboxHTTPXClient(httpx_client)
+    mapbox = MapboxClient(httpx_client)
     directions_params = DirectionsParams()
     directions_params.setup_full_request()
 
@@ -165,33 +144,31 @@ async def get_nearby_stations(
 ):
     Logger.info("Starting nearby optimization request...")
 
-    mapbox = MapboxHTTPXClient(httpx_client)
-    isochrones_response = await mapbox.get_isochrone(data.start.model_dump())
-    polygon = get_polygon(isochrones_response)
-    polygon_wkt = get_polygon_wkt(polygon)
+    # 1. Fetch Isochrone Polygon (Memory optimized)
+    mapbox = MapboxClient(httpx_client)
+    polygon_wkt = await fetch_and_build_polygon_wkt(mapbox, data.start)
 
+    # 2. Fetch Stations
     stations_rows = await db_repo.stations.fetch_nearby(polygon_wkt)
     stations = TypeAdapter(list[NearbyStation]).validate_python(stations_rows)
 
-    stations = await fetch_and_merge_fuel_prices(stations, data.fuel_type, db_repo)
-
-    osrm = OSRMHTTPXClient(httpx_client)
-    await get_and_apply_matrices(
-        stations, osrm, data.start.model_dump(), data.start.model_dump()
+    # 3. Parallelize Prices & OSRM Matrices
+    osrm = OsrmClient(httpx_client)
+    await asyncio.gather(
+        fetch_and_merge_fuel_prices(stations, data.fuel_type, db_repo),
+        get_and_apply_matrices(stations, osrm, data.start.model_dump(), data.start.model_dump())
     )
 
+    # 4. Finalize Metrics
     calculate_nearby_stations_metrics(
         stations,
         data.volume,
         data.fuel_consumption,
         data.income_per_minute,
     )
-
     top_stations = get_top_nearby_stations(
         stations, business_settings.NEARBY_MAX_STATIONS_PER_NETWORK
     )
 
-    Logger.info(
-        f"Completed nearby optimization. Returning {len(stations)} stations"
-    )
+    Logger.info(f"Completed nearby optimization. Returning {len(top_stations)} stations")
     return top_stations

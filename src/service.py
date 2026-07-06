@@ -3,11 +3,19 @@ from typing import TypeVar
 
 from sqlalchemy.engine.row import Row, Sequence
 
-from src.clients.osrm import OSRMHTTPXClient
+from src.clients.mapbox import MapboxClient
+from src.clients.osrm import OsrmClient
 from src.repositories import DBRepository
-from src.schemas import OnRouteStation, NearbyStation, BaseStation, MatrixDirection
+from src.schemas import (
+    OnRouteStation, NearbyStation, BaseStation, MatrixDirection,
+    PointCoordinates, SimpleRoute, GeoJSONLineString, DirectionsParams
+)
 from src.utils.logs import Logger
-from src.utils.response_helpers import get_matrix_distances, get_matrix_durations
+from src.utils.response_helpers import (
+    get_matrix_distances, get_matrix_durations,
+    get_route_coordinates, get_route_length, get_route_duration, get_polygon
+)
+from src.utils.wkt_builders import get_polygon_wkt
 
 StationType = TypeVar('StationType', bound=BaseStation)
 
@@ -164,7 +172,7 @@ async def fetch_and_merge_fuel_prices(
 
 async def get_and_apply_matrices(
         stations: list[StationType],
-        osrm: OSRMHTTPXClient,
+        osrm: OsrmClient,
         start: dict,
         end: dict,
 ) -> None:
@@ -185,3 +193,32 @@ async def get_and_apply_matrices(
     durations_list = merge_matrices(forward_durations, backward_durations)
 
     add_total_distances_and_durations(stations, distances_list, durations_list)
+
+
+async def fetch_and_build_simple_route(
+        mapbox: MapboxClient,
+        start: PointCoordinates,
+        end: PointCoordinates
+) -> SimpleRoute:
+    Logger.info("Fetching route from Mapbox and building SimpleRoute...")
+    response = await mapbox.get_direction(
+        [start.model_dump(), end.model_dump()], DirectionsParams()
+    )
+
+    return SimpleRoute(
+        geometry=GeoJSONLineString(
+            coordinates=get_route_coordinates(response)
+        ),
+        distance=get_route_length(response),
+        duration=get_route_duration(response)
+    )
+
+
+async def fetch_and_build_polygon_wkt(
+        mapbox: MapboxClient,
+        start: PointCoordinates
+) -> str:
+    Logger.info("Fetching isochrone from Mapbox and building polygon WKT...")
+    response = await mapbox.get_isochrone(start.model_dump())
+    polygon = get_polygon(response)
+    return get_polygon_wkt(polygon)
