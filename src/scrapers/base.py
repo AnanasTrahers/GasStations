@@ -23,10 +23,10 @@ class BaseScraper(LoggerMixin):
     subclasses must implement.
     """
 
-    source: str = "base"
-    """Identifier used in ``FuelPriceRecord.source``."""
+    SOURCE: str = "base"
+    """Identifier used in ``FuelPriceRecord.SOURCE``."""
 
-    base_url: str = ""
+    BASE_URL: str = ""
     """Root URL of the target site (used for building absolute links)."""
 
     def __init__(self, client: httpx.AsyncClient | None = None) -> None:
@@ -64,14 +64,7 @@ class BaseScraper(LoggerMixin):
                 if attempt < scraper_settings.MAX_RETRIES and exc.response.status_code >= 500:
                     delay = scraper_settings.RETRY_BACKOFF_BASE * (2 ** attempt)
                     self.log_warning(
-                        "%s %s → %s, retry %d/%d in %.1fs".format(
-                            method,
-                            url,
-                            exc.response.status_code,
-                            attempt + 1,
-                            scraper_settings.MAX_RETRIES,
-                            delay,
-                        )
+                        f"{method} {url} → {exc.response.status_code}, retry {attempt + 1}/{scraper_settings.MAX_RETRIES} in {delay:.1f}s"
                     )
                     await asyncio.sleep(delay)
                     last_exc = exc
@@ -81,14 +74,8 @@ class BaseScraper(LoggerMixin):
                 if attempt < scraper_settings.MAX_RETRIES:
                     delay = scraper_settings.RETRY_BACKOFF_BASE * (2 ** attempt)
                     self.log_warning(
-                        "%s %s request error: %s, retry %d/%d in %.1fs".format(
-                        method,
-                        url,
-                        exc,
-                        attempt + 1,
-                        scraper_settings.MAX_RETRIES,
-                        delay,
-                    ))
+                        f"{method} {url} request error: {exc}, retry {attempt + 1}/{scraper_settings.MAX_RETRIES} in {delay:.1f}s"
+                    )
                     await asyncio.sleep(delay)
                     last_exc = exc
                     continue

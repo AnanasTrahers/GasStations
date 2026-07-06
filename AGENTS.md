@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to agents when working with code in this repository.
 
 ## Facts
 Every time you get new information about this project, or new way of interaction with 
@@ -8,6 +8,9 @@ library/models/services, or specific instructions from user on how to test/imple
 add short description of acquired knowledge here in bulleted list:
 - After work is done in worktrees - merge worktree branch into main locally (`git merge`); do NOT push worktree branches to remote; Delete worktree after successful merge;
 - If needed DTO model - create pydantic schema in separate schemas.py file related to working module
+- Never add anything to `__init__.py`. Use full-path imports.
+- Don't create additional variables like `limiter = scraper_settings.VSEAZS_LIMITER`. If direct usage do not worsen readability of performance - use directly.
+- `.agents/skills/<domain>/SKILL.md` files contain domain-specific agent guidance — always read the relevant skill before working in that area. 
 
 ## Build/Run Commands
 
@@ -80,6 +83,10 @@ Both instantiated as `httpx.AsyncClient` in FastAPI lifespan, injected via `Depe
 - **ContextVar for request ID** — `LOG_ID` set by middleware, available anywhere in request scope via `get_log_id()`
 - **Station.model_validator(mode="before")** — maps raw SQLAlchemy `Row` objects to pydantic model, so service layer returns DB rows directly and schemas handle conversion
 - **DirectionsParams** is a dataclass (not BaseModel) — manual `asdict()` filtering for None values when passed as query params
+
+### Logging
+
+`LoggerMixin` (from `src/utils/logs.py`) provides `log_info`/`log_warning`/`log_error`. Prefixes messages with `[ClassName][methodName]`. `ContextVar LOG_ID` set by middleware enables request-scoped log correlation via `get_log_id()`.
 
 ### External API Endpoints Configured
 

@@ -1,3 +1,5 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 
 class ScrapersSettings:
@@ -9,6 +11,9 @@ class ScrapersSettings:
     MAX_RETRIES = 3
     RETRY_BACKOFF_BASE = 1.5  # seconds; multiplied by 2^n on each attempt
 
+    VSEAZS_LIMITER = asyncio.Semaphore(4)
+
+    PARSERS_THREAD_EXECUTOR = ThreadPoolExecutor(max_workers=4)
+
 
 scraper_settings = ScrapersSettings()
-

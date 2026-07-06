@@ -27,3 +27,53 @@ class VseazsMapper:
     def get_region(cls, region: RegionEnum) -> int:
         """Return VseAZS ID_region for the given RegionEnum member."""
         return cls._REGION_TO_ID[region]
+
+
+class MinfinMapper:
+    """Maps app-level enums to minfin-specific values and parses minfin HTML labels."""
+
+    _FUEL_TO_LABEL: dict[FuelTypeEnum, str] = {
+        FuelTypeEnum.A95_PLUS: "а-95 преміум",
+        FuelTypeEnum.A95: "а-95",
+        FuelTypeEnum.A92: "а-92",
+        FuelTypeEnum.DIESEL: "дизельне паливо",
+        FuelTypeEnum.LPG: "газ автомобільний",
+    }
+
+    # Order matters: more specific patterns first.
+    _LABEL_PATTERNS: list[tuple[str, FuelTypeEnum]] = [
+        ("а-95 преміум", FuelTypeEnum.A95_PLUS),
+        ("а 95 преміум", FuelTypeEnum.A95_PLUS),
+        ("а 95+", FuelTypeEnum.A95_PLUS),
+        ("а-95+", FuelTypeEnum.A95_PLUS),
+        ("а 95", FuelTypeEnum.A95),
+        ("а-95", FuelTypeEnum.A95),
+        ("а 92", FuelTypeEnum.A92),
+        ("а-92", FuelTypeEnum.A92),
+        ("дизельне паливо", FuelTypeEnum.DIESEL),
+        ("дизель", FuelTypeEnum.DIESEL),
+        ("дп", FuelTypeEnum.DIESEL),
+        ("газ автомобільний", FuelTypeEnum.LPG),
+        ("газ", FuelTypeEnum.LPG),
+    ]
+
+    @classmethod
+    def get_fuel_label(cls, fuel: FuelTypeEnum) -> str:
+        """Return the primary Ukrainian label for a FuelTypeEnum member."""
+        return cls._FUEL_TO_LABEL[fuel]
+
+    @classmethod
+    def parse_fuel_label(cls, label: str) -> FuelTypeEnum | None:
+        """Parse a Ukrainian fuel label from minfin HTML into a FuelTypeEnum member."""
+        key = (
+            label.strip()
+            .replace("\xa0", " ")
+            .replace("\n", " ")
+            .lower()
+        )
+        while "  " in key:
+            key = key.replace("  ", " ")
+        for pattern, fuel_type in cls._LABEL_PATTERNS:
+            if pattern in key:
+                return fuel_type
+        return None

@@ -7,6 +7,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from src.scrapers.enums import FuelTypeEnum, RegionEnum
+
 
 class FuelPriceRecord(BaseModel):
     """Single fuel price data point from any source.
@@ -18,7 +20,7 @@ class FuelPriceRecord(BaseModel):
     network_name: str
     """Display name of the gas station network (e.g. 'OKKO', 'WOG')."""
 
-    fuel_type: str
+    fuel_type: FuelTypeEnum
     """Fuel variant label (e.g. 'A-95', 'diesel', 'LPG')."""
 
     price: Decimal | None
@@ -30,7 +32,7 @@ class FuelPriceRecord(BaseModel):
     date: date
     """Date when the price was observed / reported by the source."""
 
-    region: Optional[str] = None
+    region: RegionEnum | None = None
     """Optional region name if the source provides regional breakdowns."""
 
 

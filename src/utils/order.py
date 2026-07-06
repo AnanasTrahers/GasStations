@@ -14,4 +14,8 @@ def get_uuid_str() -> StrUUID:
 
 
 def get_log_id() -> StrUUID:
-    return LOG_ID.get(get_uuid_str())
+    id_ = LOG_ID.get(None)
+    if not id_:
+        id_ = get_uuid_str()
+        LOG_ID.set(id_)
+    return id_
