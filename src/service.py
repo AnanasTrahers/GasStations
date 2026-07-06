@@ -4,85 +4,19 @@ from itertools import groupby, islice
 from typing import TypeVar
 
 from shapely import Geometry
-from shapely.geometry import LineString
-from shapely.geometry.polygon import Polygon
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql.expression import select, func, cast
 from geoalchemy2 import Geography, WKTElement
 
-from src.clients.osrm import OSRMClient
+from src.clients.osrm import OSRMHTTPXClient
 from src.config import settings
 from src.models import GasStation, FuelPrice, Network
 from src.schemas import OnRouteStation, NearbyStation, BaseStation, MatrixDirection
 from src.utils.logs import Logger
 
 StationType = TypeVar('StationType', bound=BaseStation)
-
-
-def get_route_coordinates(directions_json: dict) -> list[list[float]]:
-    try:
-        return directions_json["routes"][0]["geometry"]["coordinates"]
-    except (KeyError, IndexError, TypeError):
-        Logger.error("Failed to get route coordinates from Directions JSON")
-        raise
-
-
-def get_route_length(directions_json: dict) -> float:
-    try:
-        return directions_json["routes"][0]["distance"]
-    except (KeyError, IndexError, TypeError):
-        Logger.error("Failed to get route length from Directions JSON")
-        raise
-
-
-def get_route_duration(directions_json: dict) -> float:
-    try:
-        return directions_json["routes"][0]["duration"]
-    except (KeyError, IndexError, TypeError):
-        Logger.error("Failed to get route duration from Directions JSON")
-        raise
-
-
-def get_matrix_distances(matrix_json: dict) -> list[list[float]]:
-    try:
-        return matrix_json["distances"]
-    except (KeyError, IndexError, TypeError):
-        Logger.error("Failed to get list of distances from Matrix JSON")
-        raise
-
-
-def get_matrix_durations(matrix_json: dict) -> list[float] | list[list[float]]:
-    try:
-        return matrix_json["durations"]
-    except (KeyError, IndexError, TypeError):
-        Logger.error("Failed to get list of durations from Matrix JSON")
-        raise
-
-
-def get_polygon(isochrones_json: dict) -> list[list[float]]:
-    try:
-        return isochrones_json["features"][0]["geometry"]["coordinates"]
-    except (KeyError, IndexError, TypeError):
-        Logger.error("Failed to get polygon from Isochrones JSON")
-        raise
-
-
-def get_route_wkt(coordinates_list: list[list[float]]) -> WKTElement:
-    try:
-        return WKTElement(LineString(coordinates_list).wkt, srid=4326)
-    except ValueError:
-        Logger.error("Failed to create LineString")
-        raise
-
-
-def get_polygon_wkt(coordinates_list: list[list[float]]) -> WKTElement:
-    try:
-        return WKTElement(Polygon(coordinates_list).wkt, srid=4326)
-    except ValueError:
-        Logger.error("Failed to create Polygon")
-        raise
 
 
 async def fetch_on_route_stations(
@@ -332,7 +266,7 @@ async def fetch_and_merge_fuel_prices(
 
 async def get_and_apply_matrices(
         stations: list[StationType],
-        osrm: OSRMClient,
+        osrm: OSRMHTTPXClient,
         start: dict,
         end: dict,
 ) -> None:

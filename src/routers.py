@@ -25,22 +25,23 @@ from src.schemas import (
     NearbyStation,
 )
 from src.service import (
-    get_route_coordinates,
-    get_route_wkt,
     fetch_on_route_stations,
     assign_segment_ids,
-    get_route_length,
     calculate_on_route_stations_metrics,
-    get_route_duration,
     get_top_on_route_stations,
-    get_polygon,
     fetch_nearby_stations,
-    get_polygon_wkt,
     calculate_nearby_stations_metrics,
     get_top_nearby_stations,
     fetch_and_merge_fuel_prices,
     get_and_apply_matrices
 )
+from src.utils.response_helpers import (
+    get_route_coordinates,
+    get_route_length,
+    get_route_duration,
+    get_polygon
+)
+from src.utils.wkt_builders import get_route_wkt, get_polygon_wkt
 from src.utils.logs import Logger
 
 router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
