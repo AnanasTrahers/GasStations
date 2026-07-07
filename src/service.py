@@ -1,5 +1,6 @@
 from itertools import groupby, islice
 from typing import TypeVar
+from uuid import UUID
 
 from sqlalchemy.engine.row import Row, Sequence
 from geoalchemy2 import WKTElement
@@ -32,7 +33,7 @@ def assign_segment_ids(
     Logger.info(f"Assigned segment ids to {len(stations)} stations")
 
 
-def get_unique_network_ids(stations: list[StationType]) -> set[int]:
+def get_unique_network_ids(stations: list[StationType]) -> set[UUID]:
     return {station.network_id for station in stations}
 
 
@@ -213,6 +214,16 @@ async def fetch_and_build_simple_route(
         distance=get_route_length(response),
         duration=get_route_duration(response)
     )
+
+
+async def fetch_osrm_route_metrics(
+        osrm: OsrmClient,
+        start: PointCoordinates,
+        end: PointCoordinates
+) -> tuple[float, float]:
+    Logger.info("Fetching route from OSRM to calculate baseline metrics...")
+    response = await osrm.get_route(start.model_dump(), end.model_dump())
+    return get_route_length(response), get_route_duration(response)
 
 
 async def fetch_and_build_polygon_wkt(

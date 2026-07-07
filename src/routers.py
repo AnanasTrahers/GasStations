@@ -30,7 +30,8 @@ from src.service import (
     fetch_and_merge_fuel_prices,
     get_and_apply_matrices,
     fetch_and_build_simple_route,
-    fetch_and_build_polygon_wkt
+    fetch_and_build_polygon_wkt,
+    fetch_osrm_route_metrics
 )
 from src.utils.logs import Logger
 
@@ -51,7 +52,7 @@ async def get_on_route_stations(
 ):
     Logger.info("Starting on-route optimization request...")
 
-    # 1. Fetch Route (Memory optimized)
+    # 1. Fetch Route
     mapbox = MapboxClient(httpx_client)
     original_route = await fetch_and_build_simple_route(mapbox, data.start, data.end)
 
@@ -65,6 +66,8 @@ async def get_on_route_stations(
 
     # 3. Parallelize Prices & OSRM Matrices
     osrm = OsrmClient(httpx_client)
+    osrm_distance, osrm_duration = await fetch_osrm_route_metrics(osrm, data.start, data.end)
+
     await asyncio.gather(
         fetch_and_merge_fuel_prices(stations, data.fuel_type, db_repo),
         get_and_apply_matrices(stations, osrm, data.start.model_dump(), data.end.model_dump())
@@ -73,8 +76,8 @@ async def get_on_route_stations(
     # 4. Finalize Metrics
     calculate_on_route_stations_metrics(
         stations,
-        original_route.distance,
-        original_route.duration,
+        osrm_distance,
+        osrm_duration,
         data.volume,
         data.fuel_consumption,
         data.income_per_minute,
@@ -144,7 +147,7 @@ async def get_nearby_stations(
 ):
     Logger.info("Starting nearby optimization request...")
 
-    # 1. Fetch Isochrone Polygon (Memory optimized)
+    # 1. Fetch Isochrone Polygon
     mapbox = MapboxClient(httpx_client)
     polygon_wkt = await fetch_and_build_polygon_wkt(mapbox, data.start)
 

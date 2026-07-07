@@ -6,6 +6,7 @@ from src.schemas import MatrixDirection
 
 class OsrmClient(BaseRoutingClient):
     table_endpoint = "http://osrm:5000/table/v1/driving/"
+    route_endpoint = "http://osrm:5000/route/v1/driving/"
 
     def __init__(self, client: httpx.AsyncClient):
         super().__init__(client)
@@ -22,3 +23,12 @@ class OsrmClient(BaseRoutingClient):
             coordinates=coordinates,
             direction=direction
         )
+
+    async def get_route(
+            self,
+            start: dict,
+            end: dict
+    ) -> dict:
+        coordinates_str = self._build_coordinates_string([start, end])
+        url = self.route_endpoint + coordinates_str
+        return await self._execute_get(url, params={"overview": "false"})
