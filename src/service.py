@@ -2,6 +2,7 @@ from itertools import groupby, islice
 from typing import TypeVar
 
 from sqlalchemy.engine.row import Row, Sequence
+from geoalchemy2 import WKTElement
 
 from src.clients.mapbox import MapboxClient
 from src.clients.osrm import OsrmClient
@@ -217,7 +218,7 @@ async def fetch_and_build_simple_route(
 async def fetch_and_build_polygon_wkt(
         mapbox: MapboxClient,
         start: PointCoordinates
-) -> str:
+) -> WKTElement:
     Logger.info("Fetching isochrone from Mapbox and building polygon WKT...")
     response = await mapbox.get_isochrone(start.model_dump())
     polygon = get_polygon(response)

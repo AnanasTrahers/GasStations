@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from math import floor
+import uuid
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy.engine.row import Row
@@ -41,9 +42,9 @@ class SimpleRoute(BaseModel):
 
 
 class BaseStation(BaseModel):
-    station_id: int
+    station_id: uuid.UUID
     coordinates: PointCoordinates
-    network_id: int
+    network_id: uuid.UUID
     network_name: str
 
     price_per_liter: float | None = Field(None, gt=0)

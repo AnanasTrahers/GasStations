@@ -1,7 +1,6 @@
 from datetime import datetime, timezone, timedelta
 
-from geoalchemy2 import Geography, WKTElement
-from shapely import Geometry
+from geoalchemy2 import Geography, WKTElement, Geometry
 from sqlalchemy.engine.row import Row, Sequence
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -9,10 +8,10 @@ from sqlalchemy.sql.expression import select, func, cast
 
 from src.config import business_settings
 from src.models import GasStation, FuelPrice, Network
-from src.utils.logs import Logger
+from src.utils.logs import LoggerMixin
 
 
-class StationsRepository:
+class StationsRepository(LoggerMixin):
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -42,12 +41,12 @@ class StationsRepository:
                 buffer_radius
             ))
         )
-        Logger.info("Fetching on-route stations...")
+        self.log_info("Fetching on-route stations...")
         try:
             result = await self.session.execute(stmt)
             return result.all()
         except SQLAlchemyError:
-            Logger.error("DB query failed while fetching on-route stations")
+            self.log_error("DB query failed while fetching on-route stations")
             raise
 
     async def fetch_nearby(
@@ -70,16 +69,16 @@ class StationsRepository:
             .where(func.ST_Intersects(GasStation.geog, polygon_geog))
         )
 
-        Logger.info("Fetching nearby stations...")
+        self.log_info("Fetching nearby stations...")
         try:
             result = await self.session.execute(stmt)
             return result.all()
         except SQLAlchemyError:
-            Logger.error("DB query failed while fetching nearby stations")
+            self.log_error("DB query failed while fetching nearby stations")
             raise
 
 
-class PricesRepository:
+class PricesRepository(LoggerMixin):
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -105,12 +104,12 @@ class PricesRepository:
             )
         )
 
-        Logger.info("Fetching fuel prices...")
+        self.log_info("Fetching fuel prices...")
         try:
             result = await self.session.execute(stmt)
             return result.all()
         except SQLAlchemyError:
-            Logger.error("DB query failed while fetching fuel prices")
+            self.log_error("DB query failed while fetching fuel prices")
             raise
 
 

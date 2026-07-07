@@ -5,7 +5,7 @@ from src.schemas import MatrixDirection
 
 
 class OsrmClient(BaseRoutingClient):
-    table_endpoint = "http://osrm_engine:5000/table/v1/driving/"
+    table_endpoint = "http://osrm:5000/table/v1/driving/"
 
     def __init__(self, client: httpx.AsyncClient):
         super().__init__(client)
