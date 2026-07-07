@@ -131,14 +131,14 @@ class LoggerMixin:
         class_name = self.__class__.__name__
         return f"[{class_name}]"
 
-    # @staticmethod
-    # def _get_caller_name() -> str:
-    #     """Gets the name of the method that called the logger."""
-    #     return f"[{inspect.stack()[2].function}]"
+    @staticmethod
+    def _get_caller_name() -> str:
+        """Gets the name of the method that called the logger."""
+        return f"[{sys._getframe(2).f_code.co_name}]"
 
     def log_info(self, msg: str, **kwargs):
         Logger.info(
-            event=self._log_prefix,
+            event=self._log_prefix + self._get_caller_name(),
             msg=msg,
             increase_depth=1,
             **kwargs
@@ -146,7 +146,7 @@ class LoggerMixin:
 
     def log_warning(self, msg: str, **kwargs):
         Logger.warning(
-            event=self._log_prefix,
+            event=self._log_prefix + self._get_caller_name(),
             msg=msg,
             increase_depth=1,
             **kwargs
@@ -154,7 +154,7 @@ class LoggerMixin:
 
     def log_error(self, msg: str, *, error: Exception, **kwargs):
         Logger.error(
-            event=self._log_prefix,
+            event=self._log_prefix + self._get_caller_name(),
             msg=msg,
             error=error,
             increase_depth=1,

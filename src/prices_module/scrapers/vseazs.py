@@ -139,15 +139,10 @@ class VseazsScraper(BaseScraper):
 
 if __name__ == '__main__':
     async def main():
-        try:
-            1/0
-        except Exception as e:
-            Logger.error("amsdfmmdfm", error=e)
         async with VseazsScraper() as scraper:
-            scraper.log_info(msg="asdasd", sth="skmflmkvf", a=123)
-            # data = await scraper.collect(region=RegionEnum.KYIV)
-            # print(f"Records: {len(data)}")
-            # print(data)
+            data = await scraper.collect(region=RegionEnum.KYIV)
+            print(f"Records: {len(data)}")
+            print(data)
 
 
     asyncio.run(main())
