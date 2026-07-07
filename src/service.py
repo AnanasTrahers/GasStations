@@ -102,22 +102,31 @@ def calculate_on_route_stations_metrics(
         volume: float,
         fuel_consumption_1km: float,
         income_per_minute: float,
-) -> None:
+        max_extra_time_s: int
+) -> list[OnRouteStation]:
     Logger.info(
         "Calculating distance and duration differences, and fuel prices for on-route stations..."
     )
+    valid_stations = []
     for station in stations:
-        station.calculate_distance_difference(original_distance_m)
         station.calculate_duration_difference(original_duration_s)
+        
+        if station.duration_difference_s >= max_extra_time_s:
+            continue
+
+        station.calculate_distance_difference(original_distance_m)
         station.calculate_fuel_price(volume)
         station.calculate_total_price(fuel_consumption_1km, income_per_minute)
+        valid_stations.append(station)
+        
+    return valid_stations
 
 
 def calculate_nearby_stations_metrics(
         stations: list[NearbyStation],
         volume: float,
         fuel_consumption_1km: float,
-        income_per_minute: float,
+        income_per_minute: float
 ) -> None:
     Logger.info("Calculating fuel prices for nearby stations...")
     for station in stations:

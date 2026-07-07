@@ -81,6 +81,7 @@ async def get_on_route_stations(
         data.volume,
         data.fuel_consumption,
         data.income_per_minute,
+        business_settings.MAX_EXTRA_TIME_S,
     )
     top_stations = get_top_on_route_stations(
         stations, business_settings.ON_ROUTE_MAX_STATIONS_PER_NETWORK
@@ -167,7 +168,7 @@ async def get_nearby_stations(
         stations,
         data.volume,
         data.fuel_consumption,
-        data.income_per_minute,
+        data.income_per_minute
     )
     top_stations = get_top_nearby_stations(
         stations, business_settings.NEARBY_MAX_STATIONS_PER_NETWORK

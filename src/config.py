@@ -24,6 +24,7 @@ class BusinessSettings(BaseSettings):
     ON_ROUTE_MAX_STATIONS_PER_NETWORK: int = 1
     NEARBY_MAX_STATIONS_PER_NETWORK: int = 2
     ISOCHRONE_CONTOURS_MINUTES: int = 30
+    MAX_EXTRA_TIME_S: int = 600
 
 
 project_settings = ProjectSettings()
