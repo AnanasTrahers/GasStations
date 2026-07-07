@@ -1,13 +1,12 @@
 """Base scraper with shared HTTP client, retry logic, and error handling."""
 
 import asyncio
-from datetime import date
-from typing import Optional
-
 import httpx
 
-from src.scrapers.settings import scraper_settings
-from src.scrapers.types import ScrapingResult
+from typing import Optional
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, before_log
+
+from src.prices_module.settings import scraper_settings
 from src.utils.logs import LoggerMixin
 
 
@@ -50,6 +49,20 @@ class BaseScraper(LoggerMixin):
 
     async def _post(self, url: str, **kwargs) -> httpx.Response:
         return await self._retry("POST", url, **kwargs)
+
+    @retry(
+        stop=stop_after_attempt(scraper_settings.MAX_RETRIES),
+        wait=wait_exponential(min=2, max=30),
+        retry=retry_if_exception_type(httpx.HTTPStatusError),
+        before=...,
+        before_sleep=...
+    )
+    async def _retry_t(
+            self, method: str, url: str, **kwargs
+    ) -> httpx.Response:
+        response = await self.client.request(method, url, **kwargs)
+        response.raise_for_status()
+        return response
 
     async def _retry(
             self, method: str, url: str, **kwargs

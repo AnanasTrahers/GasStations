@@ -12,11 +12,11 @@ from functools import partial
 import httpx
 from bs4 import BeautifulSoup
 
-from src.scrapers.base import BaseScraper
-from src.scrapers.enums import RegionEnum
-from src.scrapers.mappers import MinfinMapper
-from src.scrapers.types import FuelPriceRecord
-from src.scrapers.utils import run_parser
+from src.prices_module.scrapers.base import BaseScraper
+from src.prices_module.enums import RegionEnum
+from src.prices_module.mappers import MinfinMapper
+from src.prices_module.schemas import FuelPriceRecord
+from src.prices_module.utils import run_parser
 
 _UAH_PRICE_RE = re.compile(r"(\d+[.,]\d+)")
 _COMMA_TABLE = str.maketrans(",", ".")

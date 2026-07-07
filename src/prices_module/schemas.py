@@ -1,13 +1,11 @@
 """Shared types for fuel price scrapers."""
 
-from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import Optional
 
 from pydantic import BaseModel
 
-from src.scrapers.enums import FuelTypeEnum, RegionEnum
+from src.prices_module.enums import FuelTypeEnum, RegionEnum
 
 
 class FuelPriceRecord(BaseModel):
@@ -34,15 +32,3 @@ class FuelPriceRecord(BaseModel):
 
     region: RegionEnum | None = None
     """Optional region name if the source provides regional breakdowns."""
-
-
-class ScrapingResult(BaseModel):
-    """Container returned by every scraper, holding records + metadata."""
-
-    records: list[FuelPriceRecord] = field(default_factory=list)
-    source: str = ""
-    scraped_at: date = field(default_factory=date.today)
-    errors: list[str] = field(default_factory=list)
-
-    def __bool__(self) -> bool:
-        return len(self.records) > 0

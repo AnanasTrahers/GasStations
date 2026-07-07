@@ -7,12 +7,13 @@ import httpx
 import re
 
 from bs4 import BeautifulSoup
-from src.scrapers.base import BaseScraper
-from src.scrapers.settings import scraper_settings
-from src.scrapers.types import FuelPriceRecord
-from src.scrapers.enums import FuelTypeEnum, RegionEnum
-from src.scrapers.mappers import VseazsMapper
-from src.scrapers.utils import run_parser
+from src.prices_module.scrapers.base import BaseScraper
+from src.prices_module.settings import scraper_settings
+from src.prices_module.schemas import FuelPriceRecord
+from src.prices_module.enums import FuelTypeEnum, RegionEnum
+from src.prices_module.mappers import VseazsMapper
+from src.prices_module.utils import run_parser
+from src.utils.logs import Logger
 
 
 class VseazsScraper(BaseScraper):
@@ -138,10 +139,15 @@ class VseazsScraper(BaseScraper):
 
 if __name__ == '__main__':
     async def main():
+        try:
+            1/0
+        except Exception as e:
+            Logger.error("amsdfmmdfm", error=e)
         async with VseazsScraper() as scraper:
-            data = await scraper.collect(region=RegionEnum.KYIV)
-            print(f"Records: {len(data)}")
-            print(data)
+            scraper.log_info(msg="asdasd", sth="skmflmkvf", a=123)
+            # data = await scraper.collect(region=RegionEnum.KYIV)
+            # print(f"Records: {len(data)}")
+            # print(data)
 
 
     asyncio.run(main())

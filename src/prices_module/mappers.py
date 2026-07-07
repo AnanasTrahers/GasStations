@@ -1,4 +1,7 @@
-from src.scrapers.enums import FuelTypeEnum, RegionEnum
+import re
+import string
+
+from src.prices_module.enums import FuelTypeEnum, RegionEnum
 
 
 class VseazsMapper:
@@ -65,14 +68,8 @@ class MinfinMapper:
     @classmethod
     def parse_fuel_label(cls, label: str) -> FuelTypeEnum | None:
         """Parse a Ukrainian fuel label from minfin HTML into a FuelTypeEnum member."""
-        key = (
-            label.strip()
-            .replace("\xa0", " ")
-            .replace("\n", " ")
-            .lower()
-        )
-        while "  " in key:
-            key = key.replace("  ", " ")
+        key = re.sub(fr"[{string.whitespace}\xa0]", " ", label.lower().strip())
+        key = re.sub(r"\s{2,}", " ", key)
         for pattern, fuel_type in cls._LABEL_PATTERNS:
             if pattern in key:
                 return fuel_type
