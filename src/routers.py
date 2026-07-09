@@ -108,8 +108,7 @@ async def get_detailed_routes(
     )
 
     mapbox = MapboxClient(httpx_client)
-    directions_params = DirectionsParams()
-    directions_params.setup_full_request()
+    directions_params = DirectionsParams.setup_full_request()
 
     tasks = [
         mapbox.get_direction(
@@ -120,7 +119,7 @@ async def get_detailed_routes(
             ],
             directions_params
         )
-        for station in coordinates.stations
+        for station in coordinates.stations_coordinates
     ]
 
     responses = await asyncio.gather(*tasks)
