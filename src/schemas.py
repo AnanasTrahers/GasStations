@@ -37,8 +37,8 @@ class GeoJSONLineString(BaseModel):
 
 class SimpleRoute(BaseModel):
     geometry: GeoJSONLineString
-    distance: float = Field(..., gt=0)
-    duration: float = Field(..., gt=0)
+    distance: float = Field(..., ge=0)
+    duration: float = Field(..., ge=0)
 
 
 class BaseStation(BaseModel):
@@ -175,8 +175,8 @@ class Maneuver(BaseModel):
 
 
 class RouteStep(BaseModel):
-    distance: float = Field(..., gt=0)
-    duration: float = Field(..., gt=0)
+    distance: float = Field(..., ge=0)
+    duration: float = Field(..., ge=0)
     geometry: GeoJSONLineString
     maneuver: Maneuver
     banner_instructions: list[BannerInstruction] = Field([], alias="bannerInstructions")
@@ -192,8 +192,8 @@ class RouteAnnotation(BaseModel):
 
 
 class RouteLeg(BaseModel):
-    distance: float = Field(..., gt=0)
-    duration: float = Field(..., gt=0)
+    distance: float = Field(..., ge=0)
+    duration: float = Field(..., ge=0)
     steps: list[RouteStep]
     annotation: RouteAnnotation
 
