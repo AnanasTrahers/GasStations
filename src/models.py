@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from geoalchemy2 import Geography, WKBElement
+from geoalchemy2 import Geography, WKBElement, WKTElement
 from sqlalchemy import String, func, ForeignKey, DateTime, Float
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, relationship, mapped_column
@@ -37,7 +37,7 @@ class GasStation(Base):
         primary_key=True,
         default=uuid.uuid4
     )
-    geog: Mapped[str | WKBElement] = mapped_column(
+    geog: Mapped[str | WKBElement | WKTElement] = mapped_column(
         Geography(geometry_type="Point", srid=4326)
     )
     network_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("networks.id"))

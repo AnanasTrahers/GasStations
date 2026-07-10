@@ -75,7 +75,15 @@ def merge_matrices(
     Logger.info("Merging forward and backward matrices...")
     try:
         for i in range(len(backward_matrix)):
-            merged_list.append(forward_matrix[0][i] + backward_matrix[i][0])
+            forward_val = forward_matrix[0][i]
+            backward_val = backward_matrix[i][0]
+
+            if forward_val is None or backward_val is None:
+                merged_list.append(None)
+                continue
+
+            merged_list.append(forward_val + backward_val)
+
         return merged_list
     except IndexError:
         Logger.error("Mismatched list length: matrices don't align")
@@ -109,9 +117,15 @@ def calculate_on_route_stations_metrics(
     )
     valid_stations = []
     for station in stations:
+        if station.total_duration_s is None or station.total_distance_m is None:
+            continue
+
         station.calculate_duration_difference(original_duration_s)
         
         if station.duration_difference_s >= max_extra_time_s:
+            continue
+
+        if station.price_per_liter is None:
             continue
 
         station.calculate_distance_difference(original_distance_m)
@@ -127,11 +141,18 @@ def calculate_nearby_stations_metrics(
         volume: float,
         fuel_consumption_1km: float,
         income_per_minute: float
-) -> None:
+) -> list[NearbyStation]:
     Logger.info("Calculating fuel prices for nearby stations...")
+    valid_stations = []
     for station in stations:
+        if station.price_per_liter is None:
+            continue
+        if station.total_duration_s is None or station.total_distance_m is None:
+            continue
         station.calculate_fuel_price(volume)
         station.calculate_total_price(fuel_consumption_1km, income_per_minute)
+        valid_stations.append(station)
+    return valid_stations
 
 
 def get_top_on_route_stations(

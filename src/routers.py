@@ -74,7 +74,7 @@ async def get_on_route_stations(
     )
 
     # 4. Finalize Metrics
-    calculate_on_route_stations_metrics(
+    stations = calculate_on_route_stations_metrics(
         stations,
         osrm_distance,
         osrm_duration,
@@ -163,7 +163,7 @@ async def get_nearby_stations(
     )
 
     # 4. Finalize Metrics
-    calculate_nearby_stations_metrics(
+    stations = calculate_nearby_stations_metrics(
         stations,
         data.volume,
         data.fuel_consumption,

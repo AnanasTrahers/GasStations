@@ -54,12 +54,16 @@ async def seed_db():
             GasStation(
                 network_id=network4.id, 
                 geog=WKTElement("POINT(30.4900 50.4480)", srid=4326) # Vokzalna (Railway station)
-            )
+            ),
+            GasStation(
+                network_id=network3.id,
+                geog=WKTElement("POINT(30.5145 50.4640)", srid=4326)  # Kontraktova Ploshcha
+            ),
         ]
         session.add_all(stations)
         
         await session.commit()
-        print("Database seeded successfully with 4 stations in Kyiv.")
+        print("Database seeded successfully with 5 stations in Kyiv.")
 
 if __name__ == "__main__":
     asyncio.run(seed_db())
