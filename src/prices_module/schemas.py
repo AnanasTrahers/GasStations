@@ -1,6 +1,6 @@
 """Shared types for fuel price scrapers."""
 
-from datetime import date
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel
@@ -27,8 +27,10 @@ class FuelPriceRecord(BaseModel):
     source: str
     """Identifier of the scraper that produced this record."""
 
-    date: date
+    created_at: datetime
     """Date when the price was observed / reported by the source."""
 
     region: RegionEnum | None = None
     """Optional region name if the source provides regional breakdowns."""
+
+

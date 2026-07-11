@@ -1,10 +1,10 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy import String, func, ForeignKey, Numeric, DateTime
+from sqlalchemy import String, func, ForeignKey, Numeric, DateTime, Date, UniqueConstraint
 from geoalchemy2 import Geography, WKBElement
 
 from src.database import Base
@@ -51,6 +51,12 @@ class GasStation(Base):
 
 class FuelPrice(Base):
     __tablename__ = "fuel_prices"
+    __table_args__ = (
+        UniqueConstraint(
+            "source", "fuel_type", "network_id", "created_at",
+            name="uq_fuelprice_source_fueltype_network"
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
@@ -59,11 +65,10 @@ class FuelPrice(Base):
     )
     price: Mapped[Decimal] = mapped_column(Numeric(8, 2))
     fuel_type: Mapped[str] = mapped_column(String(32))
+    source: Mapped[str] = mapped_column(String(32))
     network_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("networks.id"))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
+    created_at: Mapped[date] = mapped_column(Date())
+    region: Mapped[str] = mapped_column(String(32))
 
     network: Mapped[Network] = relationship(
         "Network",

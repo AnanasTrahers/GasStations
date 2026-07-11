@@ -7,6 +7,7 @@ from typing import Optional
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, before_log
 
 from src.prices_module.settings import scraper_settings
+from src.prices_module.utils import tenacity_log_before, tenacity_log_before_sleep, tenacity_log_after
 from src.utils.logs import LoggerMixin
 
 
@@ -45,17 +46,18 @@ class BaseScraper(LoggerMixin):
         return self._client
 
     async def _get(self, url: str, **kwargs) -> httpx.Response:
-        return await self._retry("GET", url, **kwargs)
+        return await self._retry_t("GET", url, **kwargs)
 
     async def _post(self, url: str, **kwargs) -> httpx.Response:
-        return await self._retry("POST", url, **kwargs)
+        return await self._retry_t("POST", url, **kwargs)
 
     @retry(
         stop=stop_after_attempt(scraper_settings.MAX_RETRIES),
         wait=wait_exponential(min=2, max=30),
         retry=retry_if_exception_type(httpx.HTTPStatusError),
-        before=...,
-        before_sleep=...
+        before=tenacity_log_before,
+        before_sleep=tenacity_log_before_sleep,
+        after=tenacity_log_after
     )
     async def _retry_t(
             self, method: str, url: str, **kwargs

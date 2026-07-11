@@ -56,7 +56,7 @@ logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 def inject_traceback(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        f = sys._getframe(1 + kwargs.get("increase_depth", 0))
+        f = sys._getframe(kwargs.get("increase_depth", 1))
         loc, line = f.f_code.co_filename, f.f_lineno
         loc = loc[loc.find("src"):]
         func(*args, **kwargs, msg_location=(loc, line))
@@ -76,10 +76,15 @@ class Logger:
     #     return datetime.now(tz_kyiv).strftime("%Y-%m-%d %H:%M:%S")
 
     @staticmethod
+    def _get_caller_name(increase_depth: int = 0) -> str:
+        """Gets the name of the method that called the logger."""
+        return f"[{sys._getframe(2 + increase_depth).f_code.co_name}]"
+
+    @staticmethod
     @inject_traceback
-    def info(msg: str, *, msg_location: tuple[str, int], increase_depth: int = 0, event: str = "", **kwargs):
+    def info(msg: str, *, msg_location: tuple[str, int], increase_depth: int = 1, event: str = "", **kwargs):
         main_logger.info(
-            event + str(msg_location),
+            event + Logger._get_caller_name(increase_depth) + str(msg_location),
             log_id=get_log_id(),
             msg=msg,
             **kwargs
@@ -87,9 +92,9 @@ class Logger:
 
     @staticmethod
     @inject_traceback
-    def debug(msg: str, *, msg_location: tuple[str, int], increase_depth: int = 0, event: str = "", **kwargs):
+    def debug(msg: str, *, msg_location: tuple[str, int], increase_depth: int = 1, event: str = "", **kwargs):
         main_logger.debug(
-            event + str(msg_location),
+            event + Logger._get_caller_name(increase_depth) + str(msg_location),
             log_id=get_log_id(),
             msg=msg,
             **kwargs
@@ -97,9 +102,16 @@ class Logger:
 
     @staticmethod
     @inject_traceback
-    def warning(msg: str, *, msg_location: tuple[str, int], increase_depth: int = 0, event: str = "", **kwargs):
+    def warning(
+            msg: str, *,
+            error: Exception = None,
+            msg_location: tuple[str, int] = None,
+            increase_depth: int = 1,
+            event: str = "",
+            **kwargs
+    ):
         main_logger.warning(
-            event + str(msg_location),
+            event + Logger._get_caller_name(increase_depth) + str(msg_location),
             log_id=get_log_id(),
             msg=msg,
             **kwargs
@@ -109,14 +121,14 @@ class Logger:
     @inject_traceback
     def error(
             msg: str, *,
-            error: Exception,
-            msg_location: tuple[str, int],
-            increase_depth: int = 0,
+            error: Exception = None,
+            msg_location: tuple[str, int] = None,
+            increase_depth: int = 1,
             event: str = "",
             **kwargs
     ):
         main_logger.error(
-            event + str(msg_location),
+            event + Logger._get_caller_name(increase_depth) + str(msg_location),
             log_id=get_log_id(),
             msg=msg,
             error=error,
@@ -131,32 +143,27 @@ class LoggerMixin:
         class_name = self.__class__.__name__
         return f"[{class_name}]"
 
-    @staticmethod
-    def _get_caller_name() -> str:
-        """Gets the name of the method that called the logger."""
-        return f"[{sys._getframe(2).f_code.co_name}]"
-
     def log_info(self, msg: str, **kwargs):
         Logger.info(
-            event=self._log_prefix + self._get_caller_name(),
+            event=self._log_prefix,
             msg=msg,
-            increase_depth=1,
+            increase_depth=2,
             **kwargs
         )
 
     def log_warning(self, msg: str, **kwargs):
         Logger.warning(
-            event=self._log_prefix + self._get_caller_name(),
+            event=self._log_prefix,
             msg=msg,
-            increase_depth=1,
+            increase_depth=2,
             **kwargs
         )
 
     def log_error(self, msg: str, *, error: Exception, **kwargs):
         Logger.error(
-            event=self._log_prefix + self._get_caller_name(),
+            event=self._log_prefix,
             msg=msg,
             error=error,
-            increase_depth=1,
+            increase_depth=2,
             **kwargs
         )

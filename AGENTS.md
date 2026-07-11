@@ -10,13 +10,18 @@ add short description of acquired knowledge here in bulleted list:
 - If needed DTO model - create pydantic schema in separate schemas.py file related to working module
 - Never add anything to `__init__.py`. Use full-path imports.
 - Don't create additional variables like `limiter = scraper_settings.VSEAZS_LIMITER`. If direct usage do not worsen readability of performance - use directly.
-- `.agents/skills/<domain>/SKILL.md` files contain domain-specific agent guidance — always read the relevant skill before working in that area. 
+- `.agents/skills/<domain>/SKILL.md` files contain domain-specific agent guidance — always read the relevant skill before working in that area.
+- Airflow metadata DB must be initialized once via `uv run airflow db migrate` (creates `~/airflow/airflow.db` with task_instance + other tables). Without this, importing `pipeline.py` fails with `OperationalError: no such table: task_instance`.
+- `airflow_home/airflow_local_settings.py` adds the project root to `sys.path` so all Airflow subprocesses (scheduler, DAG processor, task runners) can resolve `src.*` imports. Airflow loads this file automatically at startup from `AIRFLOW_HOME` — prefer this over `PYTHONPATH` env var which task runner subprocesses may not inherit.
 
 ## Build/Run Commands
 
 ```bash
 # Install deps (uv required)
 uv sync
+
+# Airflow DB init (one-time, creates ~/airflow/airflow.db)
+uv run airflow db migrate
 
 # Run dev server
 uv run python -m src.main

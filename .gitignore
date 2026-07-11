@@ -3,6 +3,8 @@
 
 .agents/
 .claude/
+.opencode/
+airflow_home/logs
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

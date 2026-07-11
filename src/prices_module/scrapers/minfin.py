@@ -5,9 +5,10 @@ Scrapes per-network fuel prices from the /tm/ (trade-mark) page.
 """
 
 import re
-from datetime import date
+from datetime import date, datetime, tzinfo
 from decimal import Decimal
 from functools import partial
+from zoneinfo import ZoneInfo
 
 import httpx
 from bs4 import BeautifulSoup
@@ -17,6 +18,7 @@ from src.prices_module.enums import RegionEnum
 from src.prices_module.mappers import MinfinMapper
 from src.prices_module.schemas import FuelPriceRecord
 from src.prices_module.utils import run_parser
+from src.utils.order import get_datetime_kyiv
 
 _UAH_PRICE_RE = re.compile(r"(\d+[.,]\d+)")
 _COMMA_TABLE = str.maketrans(",", ".")
@@ -46,10 +48,10 @@ class MinfinScraper(BaseScraper):
         self,
         *,
         region: RegionEnum,
-        date_: date | None = None,
+        date_: datetime | None = None,
     ) -> list[FuelPriceRecord]:
         """Fetch per-network fuel prices for all fuel types."""
-        date_ = date_ if date_ else date.today()
+        date_ = date_ if date_ else get_datetime_kyiv()
         self.log_info(f"Fetching per-network prices for {region.value}")
         raw = await self._get(self.TM_FUEL)
         return await run_parser(
@@ -62,7 +64,7 @@ class MinfinScraper(BaseScraper):
         self,
         data: str,
         *,
-        date_: date,
+        date_: datetime,
         region: RegionEnum,
     ) -> list[FuelPriceRecord]:
         """Parse the /tm/ page table (per-network prices)."""
@@ -99,7 +101,7 @@ class MinfinScraper(BaseScraper):
                         fuel_type=fuel_type,
                         price=price,
                         source=self.SOURCE,
-                        date=date_,
+                        created_at=date_,
                         region=region,
                     )
                 )

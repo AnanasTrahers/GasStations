@@ -1,13 +1,16 @@
 import uuid
 from datetime import datetime, UTC
+from zoneinfo import ZoneInfo
 
 from src.config import LOG_ID
 from src.utils.annotations import StrUUID
 
 
-def get_datetime_with_utc() -> datetime:
+def get_datetime_utc() -> datetime:
     return datetime.now(UTC)
 
+def get_datetime_kyiv() -> datetime:
+    return datetime.now(ZoneInfo("Europe/Kyiv"))
 
 def get_uuid_str() -> StrUUID:
     return str(uuid.uuid4())
