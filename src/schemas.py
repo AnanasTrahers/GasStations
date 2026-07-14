@@ -14,6 +14,10 @@ class MatrixDirection(str, Enum):
     BACKWARD = "backward"
 
 
+class FuelTypesResponse(BaseModel):
+    fuel_types: list[str]
+
+
 class PointCoordinates(BaseModel):
     lng: float = Field(..., ge=-180, le=180)
     lat: float = Field(..., ge=-90, le=90)

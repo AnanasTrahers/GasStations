@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.engine.row import Row, Sequence
 from geoalchemy2 import WKTElement
+from redis.asyncio import Redis
 
 from src.clients.mapbox import MapboxClient
 from src.clients.osrm import OsrmClient
@@ -18,6 +19,7 @@ from src.utils.response_helpers import (
     get_route_coordinates, get_route_length, get_route_duration, get_polygon
 )
 from src.utils.wkt_builders import get_polygon_wkt
+from src.utils.redis import get_cached_fuel_types, set_cached_fuel_types
 
 StationType = TypeVar('StationType', bound=BaseStation)
 
@@ -264,3 +266,20 @@ async def fetch_and_build_polygon_wkt(
     response = await mapbox.get_isochrone(start.model_dump())
     polygon = get_polygon(response)
     return get_polygon_wkt(polygon)
+
+
+async def fetch_fuel_types(
+        redis: Redis,
+        db_repo: DBRepository
+) -> list[str]:
+    fuel_types = await get_cached_fuel_types(redis)
+
+    if fuel_types is None:
+        Logger.info("Redis cache miss - querying database")
+        fuel_types = list(await db_repo.prices.fetch_unique_fuel_types())
+        fuel_types.sort()
+        await set_cached_fuel_types(redis, fuel_types)
+    else:
+        Logger.info("Redis cache hit")
+
+    return fuel_types

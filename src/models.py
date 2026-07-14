@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from geoalchemy2 import Geography, WKBElement, WKTElement
-from sqlalchemy import String, func, ForeignKey, DateTime, Float
+from sqlalchemy import String, func, ForeignKey, DateTime, Float, Index
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
@@ -50,6 +50,9 @@ class GasStation(Base):
 
 class FuelPrice(Base):
     __tablename__ = "fuel_prices"
+    __table_args__ = (
+        Index("ix_fuel_prices_created_at_fuel_type", "created_at", "fuel_type"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),

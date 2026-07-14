@@ -3,20 +3,25 @@ from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from redis.asyncio import Redis
 from sqlalchemy.exc import SQLAlchemyError
 
 from src import routers
 from src.api.middleware import LogIdMiddleware
+from src.config import project_settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     httpx_client = httpx.AsyncClient()
+    redis_client = Redis.from_url(project_settings.REDIS_URL, decode_responses=True)
 
     yield {
         "httpx_client": httpx_client,
+        "redis_client": redis_client,
     }
 
+    await redis_client.aclose()
     await httpx_client.aclose()
 
 

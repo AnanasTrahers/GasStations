@@ -9,6 +9,7 @@ LOG_ID: ContextVar[str] = ContextVar("LOG_ID", default="")
 
 class ProjectSettings(BaseSettings):
     DATABASE_URL: str
+    REDIS_URL: str
     MAPBOX_API_KEY: str
 
     model_config = SettingsConfigDict(
@@ -25,6 +26,7 @@ class BusinessSettings(BaseSettings):
     NEARBY_MAX_STATIONS_PER_NETWORK: int = 2
     ISOCHRONE_CONTOURS_MINUTES: int = 30
     MAX_EXTRA_TIME_S: int = 600
+    FUEL_TYPES_CACHE_TTL: int = 60 * 60 * 6
 
 
 project_settings = ProjectSettings()

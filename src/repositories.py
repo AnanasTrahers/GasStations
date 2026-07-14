@@ -82,6 +82,27 @@ class PricesRepository(LoggerMixin):
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def fetch_unique_fuel_types(self) -> Sequence[str]:
+        safe_date = (datetime.now(timezone.utc)
+                     - timedelta(days=business_settings.FUEL_PRICE_SAFE_DAYS))
+
+        stmt = (
+            select(FuelPrice.fuel_type)
+            .where(
+                FuelPrice.fuel_type.is_not(None),
+                FuelPrice.created_at >= safe_date
+            )
+            .distinct()
+        )
+
+        self.log_info("Fetching unique fuel types...")
+        try:
+            result = await self.session.execute(stmt)
+            return result.scalars().all()
+        except SQLAlchemyError:
+            self.log_error("DB query failed while fetching unique fuel types")
+            raise
+
     async def fetch_for_networks(
             self,
             network_ids: set[int],

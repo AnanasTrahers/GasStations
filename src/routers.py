@@ -1,13 +1,15 @@
 import asyncio
 
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, Header, Response
+from fastapi.responses import JSONResponse
 from httpx import AsyncClient
 from pydantic import TypeAdapter
+from redis.asyncio import Redis
 
 from src.clients.mapbox import MapboxClient
 from src.clients.osrm import OsrmClient
 from src.config import business_settings
-from src.dependencies import get_httpx_client, get_db_repo
+from src.dependencies import get_httpx_client, get_db_repo, get_redis
 from src.repositories import DBRepository
 from src.schemas import (
     OnRouteStationsResponse,
@@ -20,6 +22,7 @@ from src.schemas import (
     NearbyStationsRequest,
     NearbyStationsResponse,
     NearbyStation,
+    FuelTypesResponse,
 )
 from src.service import (
     assign_segment_ids,
@@ -31,13 +34,40 @@ from src.service import (
     get_and_apply_matrices,
     fetch_and_build_simple_route,
     fetch_and_build_polygon_wkt,
-    fetch_osrm_route_metrics
+    fetch_osrm_route_metrics,
+    fetch_fuel_types
 )
+from src.utils.etag import generate_etag, check_etag_match
 from src.utils.logs import Logger
-
 from src.utils.wkt_builders import get_route_wkt
 
 router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
+
+
+@router.get(
+    "/fuel-types",
+    response_model=FuelTypesResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_fuel_types(
+        if_none_match: str | None = Header(default=None),
+        db_repo: DBRepository = Depends(get_db_repo),
+        redis: Redis = Depends(get_redis),
+):
+    Logger.info("Fetching fuel types...")
+
+    fuel_types = await fetch_fuel_types(redis, db_repo)
+    etag = generate_etag(fuel_types)
+
+    if check_etag_match(if_none_match, etag):
+        Logger.info("ETag match - returning 304")
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED)
+
+    Logger.info(f"Returning {len(fuel_types)} fuel types")
+    return JSONResponse(
+        content={"fuel_types": fuel_types},
+        headers={"ETag": etag}
+    )
 
 
 @router.post(
