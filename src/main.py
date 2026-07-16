@@ -6,9 +6,9 @@ from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 from sqlalchemy.exc import SQLAlchemyError
 
-from src import routers
 from src.api.middleware import LogIdMiddleware
 from src.config import project_settings
+from src.routers import optimization, auth, subscriptions
 
 
 @asynccontextmanager
@@ -44,6 +44,8 @@ async def database_offline_handler(request: Request, exc: SQLAlchemyError):
     )
 
 
-app.include_router(routers.router)
+app.include_router(optimization.router, prefix="/v1")
+app.include_router(auth.router, prefix="/v1")
+app.include_router(subscriptions.router, prefix="/v1")
 
 app.add_middleware(LogIdMiddleware)

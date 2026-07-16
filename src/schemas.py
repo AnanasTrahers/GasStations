@@ -231,3 +231,16 @@ class DirectionsParams:
             voice_instructions="true",
             voice_units="metric"
         )
+
+
+class GoogleAuthRequest(BaseModel):
+    token: str
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class SubscriptionStatusResponse(BaseModel):
+    is_premium: bool

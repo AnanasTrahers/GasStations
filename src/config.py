@@ -11,6 +11,9 @@ class ProjectSettings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str
     MAPBOX_API_KEY: str
+    JWT_SECRET_KEY: str
+    GOOGLE_CLIENT_ID: str
+    JWT_SIGNING_ALGORITHM: str = "HS256"
 
     model_config = SettingsConfigDict(
         env_file=ROOT_DIR / ".env",
@@ -27,6 +30,7 @@ class BusinessSettings(BaseSettings):
     ISOCHRONE_CONTOURS_MINUTES: int = 30
     MAX_EXTRA_TIME_S: int = 600
     FUEL_TYPES_CACHE_TTL: int = 60 * 60 * 6
+    JWT_TTL_DAYS = 7
 
 
 project_settings = ProjectSettings()

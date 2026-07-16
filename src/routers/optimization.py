@@ -41,7 +41,7 @@ from src.utils.etag import generate_etag, check_etag_match
 from src.utils.logs import Logger
 from src.utils.wkt_builders import get_route_wkt
 
-router = APIRouter(prefix="/v1/optimization", tags=["Stations"])
+router = APIRouter(prefix="/optimization", tags=["Stations"])
 
 
 @router.get(
@@ -118,10 +118,10 @@ async def get_on_route_stations(
     )
 
     Logger.info(f"Completed on-route optimization. Returning {len(top_stations)} stations")
-    return {
-        "original_route": original_route,
-        "stations": top_stations
-    }
+    return OnRouteStationsResponse(
+        original_route=original_route,
+        stations=top_stations
+    )
 
 
 @router.post(
@@ -160,9 +160,7 @@ async def get_detailed_routes(
     ]
 
     Logger.info("Completed detailed routes generation")
-    return {
-        "routes": routes
-    }
+    return DetailedRoutesResponse(routes=routes)
 
 
 @router.post(
@@ -204,4 +202,4 @@ async def get_nearby_stations(
     )
 
     Logger.info(f"Completed nearby optimization. Returning {len(top_stations)} stations")
-    return top_stations
+    return NearbyStationsResponse(stations=top_stations)

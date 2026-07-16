@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from geoalchemy2 import Geography, WKBElement, WKTElement
-from sqlalchemy import String, func, ForeignKey, DateTime, Float, Index
+from sqlalchemy import String, func, ForeignKey, DateTime, Float, Index, Boolean
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
@@ -71,3 +71,34 @@ class FuelPrice(Base):
         "Network",
         back_populates="prices",
     )
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
+    google_id: Mapped[str] = mapped_column(String(255), unique=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True)
+
+    subscription: Mapped["Subscription"] = relationship(
+        "Subscription",
+        back_populates="user",
+    )
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
+    is_premium: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), unique=True)
+    user: Mapped[User] = relationship("User", back_populates="subscription")
