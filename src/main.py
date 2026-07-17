@@ -4,7 +4,7 @@ import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import OperationalError
 
 from src.api.middleware import LogIdMiddleware
 from src.config import project_settings
@@ -36,8 +36,8 @@ async def external_routing_api_handler(request: Request, exc: httpx.HTTPError):
     )
 
 
-@app.exception_handler(SQLAlchemyError)
-async def database_offline_handler(request: Request, exc: SQLAlchemyError):
+@app.exception_handler(OperationalError)
+async def database_offline_handler(request: Request, exc: OperationalError):
     return JSONResponse(
         status_code=503,
         content={"detail": "The database is currently unreachable. Please try again later."},
