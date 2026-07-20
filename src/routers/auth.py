@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 
-from src.config import business_settings
 from src.dependencies import get_db_repo
 from src.repositories import DBRepository
 from src.schemas import AuthResponse, GoogleAuthRequest
@@ -16,7 +15,7 @@ async def google_auth(
         db_repo: DBRepository = Depends(get_db_repo)
 ):
     Logger.info("Logging in with Google id...")
-    google_data = verify_google_token(data.token)
+    google_data = await verify_google_token(data.token)
 
     google_id = google_data.get("sub")
     email = google_data.get("email")
@@ -25,7 +24,7 @@ async def google_auth(
     if not user:
         user = await db_repo.users.create(google_id, email)
 
-    access_token = create_access_token(user.id, business_settings.JWT_TTL_DAYS)
+    access_token = create_access_token(user.id)
 
     Logger.info("Successfully logged in with Google id...")
     return AuthResponse(access_token=access_token)
