@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 
 from geoalchemy2 import Geography, WKBElement, WKTElement
+from sqlalchemy import JSON as SAJSON
 from sqlalchemy import String, func, ForeignKey, DateTime, Float, Index, Boolean
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, relationship, mapped_column
@@ -99,6 +100,46 @@ class Subscription(Base):
         default=uuid.uuid4
     )
     is_premium: Mapped[bool] = mapped_column(Boolean, default=False)
+    purchase_token: Mapped[str | None] = mapped_column(
+        String(1024), unique=True, nullable=True
+    )
+    product_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    platform: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    starts_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), unique=True)
     user: Mapped[User] = relationship("User", back_populates="subscription")
+
+
+class SubscriptionHistory(Base):
+    __tablename__ = "subscription_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    event_type: Mapped[str] = mapped_column(String(64))
+    platform: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    purchase_token: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    product_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    raw_payload: Mapped[dict | None] = mapped_column(SAJSON, nullable=True)
+    event_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
