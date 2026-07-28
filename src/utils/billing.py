@@ -47,7 +47,7 @@ def _decode_pubsub_payload(body: dict) -> dict:
         decoded = base64.b64decode(encoded_data)
         return json.loads(decoded)
     except (ValueError, json.JSONDecodeError) as e:
-        Logger.error(f"Failed to decode webhook payload: {e}")
+        Logger.error(f"Failed to decode webhook payload", error=e)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid payload encoding",

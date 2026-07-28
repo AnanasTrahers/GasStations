@@ -23,7 +23,7 @@ async def verify_google_token(token: str) -> Mapping[str, Any]:
         return info
 
     except ValueError as e:
-        Logger.error(f"Invalid Google token: {e}")
+        Logger.error(f"Invalid Google token", error=e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Google token"

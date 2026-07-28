@@ -37,7 +37,7 @@ def get_current_user_id(
             algorithms=[project_settings.JWT_SIGNING_ALGORITHM]
         )
     except InvalidTokenError as e:
-        Logger.error(f"JWT validation failed: {e}")
+        Logger.error(f"JWT validation failed", error=e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
