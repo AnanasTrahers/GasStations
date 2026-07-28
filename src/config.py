@@ -1,10 +1,9 @@
-from contextvars import ContextVar
 from pathlib import Path
-
+from contextvars import ContextVar
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
-LOG_ID: ContextVar[str] = ContextVar("LOG_ID", default="")
+LOG_ID: ContextVar[str] = ContextVar("LOG_ID")
 
 
 class ProjectSettings(BaseSettings):
