@@ -23,7 +23,8 @@ from src.utils.logs import Logger
 )
 def fuel_prices_etl_sync():
     @task
-    def extract_minfin(region: str) -> list[dict]:
+    def extract_minfin() -> list[dict]:
+        region = "KYIV"
         Logger.info("[extract][minfin] starting", region=region)
 
         async def _run() -> list[dict]:
@@ -41,7 +42,8 @@ def fuel_prices_etl_sync():
         return result
 
     @task
-    def extract_vseazs(region: str) -> list[dict]:
+    def extract_vseazs() -> list[dict]:
+        region = "KYIV"
         Logger.info("[extract][vseazs] starting", region=region)
 
         async def _run() -> list[dict]:
@@ -95,11 +97,6 @@ def fuel_prices_etl_sync():
         asyncio.run(_run())
         Logger.info("[load] done")
 
-    region = "{{ params.region }}"
-
-    minfin_data = extract_minfin(region)
-    vseazs_data = extract_vseazs(region)
-    merged = transform(minfin_data, vseazs_data)
-    load(merged)
+    load(transform(extract_minfin(), extract_vseazs()))
 
 fuel_prices_etl_sync()
