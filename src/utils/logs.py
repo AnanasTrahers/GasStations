@@ -81,7 +81,7 @@ class Logger:
 
     @staticmethod
     @inject_traceback
-    def info(msg: str, *, msg_location: tuple[str, int], increase_depth: int = 1, event: str = "", **kwargs):
+    def info(msg: str, *, msg_location: tuple[str, int] = None, increase_depth: int = 1, event: str = "", **kwargs):
         main_logger.info(
             event + Logger._get_caller_name(increase_depth) + str(msg_location),
             log_id=get_log_id(),
@@ -91,7 +91,7 @@ class Logger:
 
     @staticmethod
     @inject_traceback
-    def debug(msg: str, *, msg_location: tuple[str, int], increase_depth: int = 1, event: str = "", **kwargs):
+    def debug(msg: str, *, msg_location: tuple[str, int] = None, increase_depth: int = 1, event: str = "", **kwargs):
         main_logger.debug(
             event + Logger._get_caller_name(increase_depth) + str(msg_location),
             log_id=get_log_id(),
@@ -113,6 +113,7 @@ class Logger:
             event + Logger._get_caller_name(increase_depth) + str(msg_location),
             log_id=get_log_id(),
             msg=msg,
+            error=error,
             **kwargs
         )
 

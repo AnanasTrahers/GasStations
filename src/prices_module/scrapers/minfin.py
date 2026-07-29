@@ -5,10 +5,9 @@ Scrapes per-network fuel prices from the /tm/ (trade-mark) page.
 """
 
 import re
-from datetime import date, datetime, tzinfo
+from datetime import datetime
 from decimal import Decimal
 from functools import partial
-from zoneinfo import ZoneInfo
 
 import httpx
 from bs4 import BeautifulSoup
@@ -19,6 +18,7 @@ from src.prices_module.mappers import MinfinMapper
 from src.prices_module.schemas import FuelPriceRecord
 from src.prices_module.utils import run_parser
 from src.utils.order import get_datetime_kyiv
+from src.utils.logs import Logger
 
 _UAH_PRICE_RE = re.compile(r"(\d+[.,]\d+)")
 _COMMA_TABLE = str.maketrans(",", ".")
@@ -135,10 +135,22 @@ class MinfinScraper(BaseScraper):
 if __name__ == "__main__":
     import asyncio
 
-    async def main():
-        async with MinfinScraper() as scraper:
-            records = await scraper.collect(region=RegionEnum.KYIV)
-            print(f"Records: {len(records)}")
-            print(records)
+    def extract_minfin(region: str) -> list[dict]:
+        Logger.info("[extract][minfin] starting", region=region)
 
-    asyncio.run(main())
+        async def _run() -> list[dict]:
+            async with httpx.AsyncClient() as httpx_client:
+                async with MinfinScraper(client=httpx_client) as scraper:
+                    data = await scraper.collect(region=RegionEnum(region))
+            return [r.model_dump(mode="json") for r in data]
+
+        result = asyncio.run(_run())
+        Logger.info(
+            "[extract][minfin] done",
+            region=region,
+            records=len(result),
+        )
+        return result
+
+
+    extract_minfin(region=RegionEnum.KYIV)
