@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql.expression import select, func, cast
 
 from src.config import business_settings
-from src.models import GasStation, FuelPrice, Network, User, Subscription
+from src.models import GasStation, FuelPrice, Network
 from src.utils.logs import LoggerMixin
 
 
@@ -134,56 +134,7 @@ class PricesRepository(LoggerMixin):
             raise
 
 
-class UsersRepository(LoggerMixin):
-    def __init__(self, session: AsyncSession):
-        self.session = session
-
-    async def get_by_google_id(self, google_id: str) -> User | None:
-        stmt = select(User).where(User.google_id == google_id)
-        self.log_info("Fetching user by Google ID...")
-        try:
-            result = await self.session.execute(stmt)
-            return result.scalar_one_or_none()
-        except SQLAlchemyError:
-            self.log_error("DB query failed while fetching user")
-            raise
-
-    async def create(self, google_id: str, email: str) -> User:
-        self.log_info("Creating user with default subscription...")
-        try:
-            user = User(google_id=google_id, email=email)
-            self.session.add(user)
-            await self.session.flush()
-
-            subscription = Subscription(user_id=user.id)
-            self.session.add(subscription)
-
-            await self.session.commit()
-            return user
-        except SQLAlchemyError:
-            self.log_error("DB query failed while creating user")
-            await self.session.rollback()
-            raise
-
-
-class SubscriptionsRepository(LoggerMixin):
-    def __init__(self, session: AsyncSession):
-        self.session = session
-
-    async def get_by_user_id(self, user_id: str) -> Subscription | None:
-        stmt = select(Subscription).where(Subscription.user_id == user_id)
-        self.log_info("Fetching subscription by user ID...")
-        try:
-            result = await self.session.execute(stmt)
-            return result.scalar_one_or_none()
-        except SQLAlchemyError:
-            self.log_error("DB query failed while fetching subscription")
-            raise
-
-
 class DBRepository:
     def __init__(self, session: AsyncSession):
         self.stations = StationsRepository(session)
         self.prices = PricesRepository(session)
-        self.users = UsersRepository(session)
-        self.subscriptions = SubscriptionsRepository(session)
