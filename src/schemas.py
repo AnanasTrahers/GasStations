@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
-from enum import Enum, IntEnum
+from enum import Enum
 from math import floor
 import uuid
 
@@ -243,58 +242,5 @@ class AuthResponse(BaseModel):
     token_type: str = "bearer"
 
 
-class Platform(str, Enum):
-    GOOGLE = "GOOGLE"
-
-
-class SubscriptionStatus(str, Enum):
-    ACTIVE = "active"
-    CANCELED = "canceled"
-    IN_GRACE_PERIOD = "in_grace_period"
-    ON_HOLD = "on_hold"
-    PAUSED = "paused"
-    EXPIRED = "expired"
-    REVOKED = "revoked"
-
-    @property
-    def grants_premium(self) -> bool:
-        return self in (
-            SubscriptionStatus.ACTIVE,
-            SubscriptionStatus.IN_GRACE_PERIOD,
-            SubscriptionStatus.ON_HOLD,
-        )
-
-
-class GoogleNotificationType(IntEnum):
-    """Google Play RTDN notification types.
-    Reference: https://developer.android.com/google/play/billing/rtdn-reference
-    """
-    SUBSCRIPTION_RECOVERED = 1
-    SUBSCRIPTION_RENEWED = 2
-    SUBSCRIPTION_CANCELED = 3
-    SUBSCRIPTION_PURCHASED = 4
-    SUBSCRIPTION_ON_HOLD = 5
-    SUBSCRIPTION_IN_GRACE_PERIOD = 6
-    SUBSCRIPTION_RESTARTED = 7
-    SUBSCRIPTION_PRICE_CHANGE_CONFIRMED = 8
-    SUBSCRIPTION_DEFERRED = 9
-    SUBSCRIPTION_PAUSED = 10
-    SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED = 11
-    SUBSCRIPTION_REVOKED = 12
-    SUBSCRIPTION_EXPIRED = 13
-
-
 class SubscriptionStatusResponse(BaseModel):
     is_premium: bool
-    expires_at: datetime | None = None
-
-
-class VerifyPurchaseRequest(BaseModel):
-    purchase_token: str
-    product_id: str
-
-
-class VerifyPurchaseResponse(BaseModel):
-    is_premium: bool
-    expires_at: datetime | None
-

@@ -36,6 +36,12 @@ def get_current_user_id(
             project_settings.JWT_SECRET_KEY,
             algorithms=[project_settings.JWT_SIGNING_ALGORITHM]
         )
+
+        user_id = payload.get("sub")
+
+        if user_id is None:
+            raise ValueError("Sub claim missing in JWT")
+        return user_id
     except InvalidTokenError as e:
         Logger.error(f"JWT validation failed", error=e)
         raise HTTPException(
@@ -43,14 +49,3 @@ def get_current_user_id(
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    user_id = payload.get("sub")
-    if user_id is None:
-        Logger.error("Sub claim missing in JWT")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return user_id

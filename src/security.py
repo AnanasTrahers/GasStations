@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 from google.auth.transport import requests
 from google.oauth2 import id_token
 
-from src.config import project_settings, business_settings
+from src.config import project_settings
 from src.utils.logs import Logger
 
 
@@ -31,7 +31,7 @@ async def verify_google_token(token: str) -> Mapping[str, Any]:
 
 
 def create_access_token(user_id: str) -> str:
-    exp = datetime.now(timezone.utc) + timedelta(days=business_settings.JWT_TTL_DAYS)
+    exp = datetime.now(timezone.utc) + timedelta(days=project_settings.JWT_SECRET_KEY)
     to_encode = {"sub": str(user_id), "exp": exp}
 
     return jwt.encode(
