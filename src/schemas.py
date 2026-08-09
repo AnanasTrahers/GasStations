@@ -116,8 +116,8 @@ class OnRouteStation(BaseStation):
     ) -> None:
         try:
             self.segment_id = floor(self.fraction * route_length_m / segment_length_m)
-        except ZeroDivisionError:
-            Logger.error("Division by zero. segment_length_m can't be 0")
+        except ZeroDivisionError as e:
+            Logger.error("Division by zero. segment_length_m can't be 0", error=e)
             raise
 
     def calculate_distance_difference(self, original_distance_m: float) -> None:

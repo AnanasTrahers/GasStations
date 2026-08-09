@@ -45,8 +45,8 @@ class StationsRepository(LoggerMixin):
         try:
             result = await self.session.execute(stmt)
             return result.all()
-        except SQLAlchemyError:
-            self.log_error("DB query failed while fetching on-route stations")
+        except SQLAlchemyError as e:
+            self.log_error("DB query failed while fetching on-route stations", error=e)
             raise
 
     async def fetch_nearby(
@@ -73,8 +73,8 @@ class StationsRepository(LoggerMixin):
         try:
             result = await self.session.execute(stmt)
             return result.all()
-        except SQLAlchemyError:
-            self.log_error("DB query failed while fetching nearby stations")
+        except SQLAlchemyError as e:
+            self.log_error("DB query failed while fetching nearby stations", error=e)
             raise
 
 
@@ -99,8 +99,8 @@ class PricesRepository(LoggerMixin):
         try:
             result = await self.session.execute(stmt)
             return result.scalars().all()
-        except SQLAlchemyError:
-            self.log_error("DB query failed while fetching unique fuel types")
+        except SQLAlchemyError as e:
+            self.log_error("DB query failed while fetching unique fuel types", error=e)
             raise
 
     async def fetch_for_networks(
@@ -129,8 +129,8 @@ class PricesRepository(LoggerMixin):
         try:
             result = await self.session.execute(stmt)
             return result.all()
-        except SQLAlchemyError:
-            self.log_error("DB query failed while fetching fuel prices")
+        except SQLAlchemyError as e:
+            self.log_error("DB query failed while fetching fuel prices", error=e)
             raise
 
 

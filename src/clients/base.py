@@ -44,13 +44,13 @@ class BaseRoutingClient(LoggerMixin):
             result.raise_for_status()
             return result.json()
         except httpx.HTTPStatusError as e:
-            self.log_error(f"API rejected request with error status {e.response.status_code}")
+            self.log_error(f"API rejected request with error status {e.response.status_code}", error=e)
             raise
-        except httpx.RequestError:
-            self.log_error("Network connection failed")
+        except httpx.RequestError as e:
+            self.log_error("Network connection failed", error=e)
             raise
-        except ValueError:
-            self.log_error("Failed to decode JSON from response")
+        except ValueError as e:
+            self.log_error("Failed to decode JSON from response", error=e)
             raise
 
     async def _call_matrix(

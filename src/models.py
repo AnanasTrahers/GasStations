@@ -1,11 +1,11 @@
 import uuid
-from datetime import datetime, date
+from datetime import date
+from decimal import Decimal
 
 from geoalchemy2 import Geography, WKBElement, WKTElement
-from sqlalchemy import JSON as SAJSON
 from sqlalchemy import (
-    String, func, ForeignKey, DateTime, Float,
-    Index, Boolean, Date, UniqueConstraint
+    String, ForeignKey, DECIMAL,
+    Index, Date, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, relationship, mapped_column
@@ -67,7 +67,7 @@ class FuelPrice(Base):
         primary_key=True,
         default=uuid.uuid4
     )
-    price: Mapped[float] = mapped_column(Float)
+    price: Mapped[DECIMAL] = mapped_column(DECIMAL)
     fuel_type: Mapped[str] = mapped_column(String(32))
     source: Mapped[str] = mapped_column(String(32))
     network_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("networks.id"))

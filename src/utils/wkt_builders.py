@@ -8,14 +8,14 @@ from src.utils.logs import Logger
 def get_route_wkt(coordinates_list: list[list[float]]) -> WKTElement:
     try:
         return WKTElement(LineString(coordinates_list).wkt, srid=4326)
-    except ValueError:
-        Logger.error("Failed to create LineString")
+    except ValueError as e:
+        Logger.error("Failed to create LineString", error=e)
         raise
 
 
 def get_polygon_wkt(coordinates_list: list[list[float]]) -> WKTElement:
     try:
         return WKTElement(Polygon(coordinates_list).wkt, srid=4326)
-    except ValueError:
-        Logger.error("Failed to create Polygon")
+    except ValueError as e:
+        Logger.error("Failed to create Polygon", error=e)
         raise

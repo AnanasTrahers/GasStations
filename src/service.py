@@ -87,8 +87,8 @@ def merge_matrices(
             merged_list.append(forward_val + backward_val)
 
         return merged_list
-    except IndexError:
-        Logger.error("Mismatched list length: matrices don't align")
+    except IndexError as e:
+        Logger.error("Mismatched list length: matrices don't align", error=e)
         raise
 
 
@@ -100,8 +100,8 @@ def add_total_distances_and_durations(
         for station, distance, duration in zip(stations, distances_m, durations_s, strict=True):
             station.add_total_distance(distance)
             station.add_total_duration(duration)
-    except ValueError:
-        Logger.error("Mismatched list length: stations, distances and durations don't align")
+    except ValueError as e:
+        Logger.error("Mismatched list length: stations, distances and durations don't align", error=e)
         raise
 
 
@@ -272,7 +272,7 @@ async def fetch_fuel_types(
         redis: Redis,
         db_repo: DBRepository
 ) -> list[str]:
-    fuel_types = await get_cached_fuel_types(redis)
+    fuel_types = None#await get_cached_fuel_types(redis)
 
     if fuel_types is None:
         Logger.info("Redis cache miss - querying database")
