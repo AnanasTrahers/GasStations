@@ -272,13 +272,16 @@ async def fetch_fuel_types(
         redis: Redis,
         db_repo: DBRepository
 ) -> list[str]:
-    fuel_types = None#await get_cached_fuel_types(redis)
+    # Cache disabled for testing period
+    # fuel_types = await get_cached_fuel_types(redis)
+    fuel_types = None
 
     if fuel_types is None:
         Logger.info("Redis cache miss - querying database")
         fuel_types = list(await db_repo.prices.fetch_unique_fuel_types())
         fuel_types.sort()
-        await set_cached_fuel_types(redis, fuel_types)
+        # Cache disabled for testing period
+        # await set_cached_fuel_types(redis, fuel_types)
     else:
         Logger.info("Redis cache hit")
 

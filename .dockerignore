@@ -3,3 +3,5 @@
 .agents
 data/
 osrm/
+airflow_home/logs/
+.env
