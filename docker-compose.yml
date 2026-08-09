@@ -42,9 +42,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/gasstations
-      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./.env:/app/.env
     ports:
       - "8000:8000"
 

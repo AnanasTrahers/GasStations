@@ -80,7 +80,7 @@ class BaseStation(BaseModel):
         return res
 
     def add_fuel_price_per_liter(self, price_per_liter: float) -> None:
-        self.price_per_liter = price_per_liter
+        self.price_per_liter = float(price_per_liter)
 
     def add_total_distance(self, distance_m: float) -> None:
         self.total_distance_m = distance_m

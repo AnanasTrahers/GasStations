@@ -66,7 +66,10 @@ async def get_fuel_types(
     Logger.info(f"Returning {len(fuel_types)} fuel types")
     return JSONResponse(
         content={"fuel_types": fuel_types},
-        headers={"ETag": etag}
+        headers={
+            "ETag": etag,
+            "Cache-Control": "no-cache"
+        }
     )
 
 
