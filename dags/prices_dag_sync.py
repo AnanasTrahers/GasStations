@@ -2,12 +2,12 @@ import asyncio
 from datetime import timedelta, datetime
 
 import httpx
-
 from airflow.sdk import task, dag
 
 from src.database import AsyncSessionLocal
 from src.prices_module.dal import PricesDAL
 from src.prices_module.enums import RegionEnum
+from src.prices_module.network_registry import normalize_network_name
 from src.prices_module.schemas import FuelPriceRecord
 from src.prices_module.scrapers.minfin import MinfinScraper
 from src.prices_module.scrapers.vseazs import VseazsScraper
@@ -66,7 +66,7 @@ def fuel_prices_etl_sync():
         retry_exponential_backoff=True,
     )
     def transform(
-        minfin_records: list[dict], vseazs_records: list[dict]
+            minfin_records: list[dict], vseazs_records: list[dict]
     ) -> list[dict]:
         Logger.info(
             "[transform] starting",
@@ -76,6 +76,8 @@ def fuel_prices_etl_sync():
         all_records = [
             FuelPriceRecord(**r) for r in minfin_records + vseazs_records
         ]
+        for record in all_records:
+            record.network_name = normalize_network_name(record.network_name)
         result = [r.model_dump(mode="json") for r in all_records]
         Logger.info(
             "[transform] done",
@@ -98,5 +100,6 @@ def fuel_prices_etl_sync():
         Logger.info("[load] done")
 
     load(transform(extract_minfin(), extract_vseazs()))
+
 
 fuel_prices_etl_sync()

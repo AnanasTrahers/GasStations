@@ -107,9 +107,9 @@ When the user requests a durable behavior change, record it here or in the relev
   - `src/clients/` — external HTTP clients (Mapbox, OSRM, Google Play).
   - `src/routers/` — FastAPI routers mounted under `/v1` (optimization, auth, subscriptions).
   - `src/utils/` — shared utilities (logging, Redis cache, ETag, WKT builders, response helpers, billing/Pub-Sub helpers, datetime/uuid).
-  - `src/prices_module/` — fuel-price ETL subsystem (enums, schemas, mappers, DAL, settings, utils).
-    - `src/prices_module/scrapers/` — site scrapers (`base`, `minfin`, `vseazs`).
-- `dags/` — Airflow ETL DAGs (`fuel_prices_etl` async, `fuel_prices_etl_sync` sync variant).
+  - `src/prices_module/` — fuel-price ETL subsystem and station import (enums, schemas, mappers, network registry, DAL with spatial upsert, settings, utils).
+    - `src/prices_module/scrapers/` — site scrapers (`base`, `minfin`, `vseazs`, `overpass`).
+- `dags/` — Airflow ETL DAGs (`fuel_prices_etl` async, `fuel_prices_etl_sync` sync variant, `gas_stations_import` weekly station import from OSM).
 - `migrations/` — async Alembic for the `app` schema (GeoAlchemy2-wired).
 - `airflow_home/` — Airflow `$AIRFLOW_HOME`; `config/airflow_local_settings.py` bootstraps `sys.path` so DAGs import `src.*`.
 - `osrm/` — OSRM Docker preprocessing entrypoint (download + extract + contract Ukraine OSM).

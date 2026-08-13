@@ -1,10 +1,10 @@
 """Base scraper with shared HTTP client, retry logic, and error handling."""
 
 import asyncio
-import httpx
-
 from typing import Optional
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, before_log
+
+import httpx
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from src.prices_module.settings import scraper_settings
 from src.prices_module.utils import tenacity_log_before, tenacity_log_before_sleep, tenacity_log_after
@@ -54,7 +54,7 @@ class BaseScraper(LoggerMixin):
     @retry(
         stop=stop_after_attempt(scraper_settings.MAX_RETRIES),
         wait=wait_exponential(min=2, max=30),
-        retry=retry_if_exception_type(httpx.HTTPStatusError),
+        retry=retry_if_exception_type((httpx.HTTPStatusError, httpx.RequestError)),
         before=tenacity_log_before,
         before_sleep=tenacity_log_before_sleep,
         after=tenacity_log_after

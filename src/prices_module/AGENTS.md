@@ -2,23 +2,25 @@
 
 ## Purpose
 
-Scrapes per-network fuel prices from external Ukrainian sites, normalizes them into `FuelPriceRecord`, and bulk-upserts them into `fuel_prices`. Driven by Airflow DAGs in `dags/`; also runnable standalone.
+Scrapes per-network fuel prices from external Ukrainian sites, normalizes them into `FuelPriceRecord`, and bulk-upserts them into `fuel_prices`. Also owns the canonical network name registry used across all ETL pipelines, the `OverpassScraper` for gas station location import, and the `StationDAL` for spatial upserts. Driven by Airflow DAGs in `dags/`; also runnable standalone.
 
 ## Ownership
 
 - `enums.py` — `FuelTypeEnum`, `RegionEnum` (shared vocabulary across scrapers and mappers).
-- `schemas.py` — `FuelPriceRecord`: the single normalized shape every scraper emits (`network_name`, `fuel_type`, `price` Decimal, `source`, `created_at`, `region`).
+- `schemas.py` — `FuelPriceRecord` (price scraper output) and `StationRecord` (Overpass station output).
 - `mappers.py` — `VseazsMapper` (enum→numeric IDs) and `MinfinMapper` (enum↔Ukrainian labels, ordered pattern list).
-- `dal.py` — `BaseDAL`, `NetworkDAL` (bulk upsert `on_conflict_do_nothing` on `name`), `PricesDAL.insert` (upserts networks first, then bulk-upserts `FuelPrice` keyed on `(source, fuel_type, network_id, created_at)`, updating `price` on conflict).
-- `settings.py` — `ScrapersSettings` singleton: user agent, timeouts, retry config, `VSEAZS_LIMITER` semaphore (4), shared `PARSERS_THREAD_EXECUTOR` (4 workers).
+- `network_registry.py` — canonical network name registry. Maps all known aliases (Cyrillic/Latin/case variants) to a single display name. `normalize_network_name(raw)` → canonical or raw + warning. `is_known_network(raw)` → bool (silent).
+- `dal.py` — `BaseDAL`, `NetworkDAL` (bulk upsert `on_conflict_do_nothing` on `name`), `PricesDAL.insert` (upserts networks first, then bulk-upserts `FuelPrice`), `StationDAL.spatial_upsert` (same network + within 50m = update, else insert).
+- `settings.py` — `ScrapersSettings` singleton: user agent, timeouts, retry config, `VSEAZS_LIMITER` semaphore (4), `PARSERS_THREAD_EXECUTOR` (4 workers), `OVERPASS_TIMEOUT` (240s).
 - `utils.py` — `run_parser` (offloads CPU-bound parsing to the thread pool, copying context) and tenacity log hooks.
 - `scrapers/` — site-specific scrapers (own child doc).
 
 ## Local Contracts
 
-- Every scraper subclasses `BaseScraper`, sets `SOURCE` and `BASE_URL`, and implements `collect(*, region, date_=None) -> list[FuelPriceRecord]`. Each is an async context manager.
-- All scrapers output `FuelPriceRecord` only — no source-specific types cross the boundary into `dal.py` or DAGs.
-- Upsert key `(source, fuel_type, network_id, created_at)` is the contract with the DB; changing it requires a migration.
+- Every price scraper subclasses `BaseScraper`, sets `SOURCE` and `BASE_URL`, and implements `collect(*, region, date_=None) -> list[FuelPriceRecord]`. The `OverpassScraper` implements `collect() -> list[StationRecord]` (no region/date). Each is an async context manager.
+- All price scrapers output `FuelPriceRecord` only; `OverpassScraper` outputs `StationRecord` only — no source-specific types cross into DALs or DAGs.
+- Network names from scrapers must be normalised via `normalize_network_name()` in the DAG transform step before reaching the DAL.
+- Upsert key `(source, fuel_type, network_id, created_at)` is the price DB contract; `(network_id, geog proximity 50m)` is the station DB contract.
 - Parsing must run through `run_parser` to avoid blocking the event loop.
 
 ## Work Guidance
@@ -33,4 +35,4 @@ Scrapes per-network fuel prices from external Ukrainian sites, normalizes them i
 
 ## Child DOX Index
 
-- `scrapers/` — site scrapers (`base`, `minfin`, `vseazs`).
+- `scrapers/` — site scrapers (`base`, `minfin`, `vseazs`, `overpass`).

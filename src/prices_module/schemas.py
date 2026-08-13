@@ -34,3 +34,21 @@ class FuelPriceRecord(BaseModel):
     """Optional region name if the source provides regional breakdowns."""
 
 
+class StationRecord(BaseModel):
+    """Single gas station data point from the Overpass/OSM source.
+
+    The station-import DAG normalises Overpass output into this shape
+    before upserting into ``gas_stations``.
+    """
+
+    network_name: str
+    """Canonical display name of the gas station network."""
+
+    lat: float
+    """WGS-84 latitude."""
+
+    lng: float
+    """WGS-84 longitude."""
+
+    osm_id: int
+    """Original OSM node/way ID (for dedup reference)."""

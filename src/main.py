@@ -14,7 +14,11 @@ from src.config import project_settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    httpx_client = httpx.AsyncClient()
+    httpx_client = httpx.AsyncClient(
+        transport=httpx.AsyncHTTPTransport(retries=3),
+        limits=httpx.Limits(max_keepalive_connections=0),
+        timeout=httpx.Timeout(10.0)
+    )
     redis_client = Redis.from_url(project_settings.REDIS_URL, decode_responses=True)
 
     yield {

@@ -15,5 +15,7 @@ class ScrapersSettings:
 
     PARSERS_THREAD_EXECUTOR = ThreadPoolExecutor(max_workers=4)
 
+    OVERPASS_TIMEOUT = 240.0
+
 
 scraper_settings = ScrapersSettings()
