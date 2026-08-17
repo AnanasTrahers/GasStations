@@ -6,6 +6,7 @@ from sqlalchemy.engine.row import Row, Sequence
 from geoalchemy2 import WKTElement
 from redis.asyncio import Redis
 
+from prices_module.enums import FuelTypeEnum
 from src.clients.mapbox import MapboxClient
 from src.clients.osrm import OsrmClient
 from src.repositories import DBRepository
@@ -271,7 +272,7 @@ async def fetch_and_build_polygon_wkt(
 async def fetch_fuel_types(
         redis: Redis,
         db_repo: DBRepository
-) -> list[str]:
+) -> list[FuelTypeEnum]:
     # Cache disabled for testing period
     # fuel_types = await get_cached_fuel_types(redis)
     fuel_types = None

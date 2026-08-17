@@ -6,6 +6,7 @@ import uuid
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy.engine.row import Row
 
+from prices_module.enums import FuelTypeEnum
 from src.utils.logs import Logger
 
 
@@ -15,7 +16,7 @@ class MatrixDirection(str, Enum):
 
 
 class FuelTypesResponse(BaseModel):
-    fuel_types: list[str]
+    fuel_types: list[FuelTypeEnum]
 
 
 class PointCoordinates(BaseModel):

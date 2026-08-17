@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql.expression import select, func, cast
 
+from prices_module.enums import FuelTypeEnum
 from src.config import business_settings
 from src.models import GasStation, FuelPrice, Network
 from src.utils.logs import LoggerMixin
@@ -82,7 +83,7 @@ class PricesRepository(LoggerMixin):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def fetch_unique_fuel_types(self) -> Sequence[str]:
+    async def fetch_unique_fuel_types(self) -> Sequence[FuelTypeEnum]:
         safe_date = (datetime.now(timezone.utc)
                      - timedelta(days=business_settings.FUEL_PRICE_SAFE_DAYS))
 
@@ -98,7 +99,8 @@ class PricesRepository(LoggerMixin):
         self.log_info("Fetching unique fuel types...")
         try:
             result = await self.session.execute(stmt)
-            return result.scalars().all()
+            result = result.scalars().all()
+            return [FuelTypeEnum(r) for r in result]
         except SQLAlchemyError as e:
             self.log_error("DB query failed while fetching unique fuel types", error=e)
             raise
