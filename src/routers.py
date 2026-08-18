@@ -95,6 +95,13 @@ async def get_on_route_stations(
         route_wkt, business_settings.BUFFER_RADIUS_M
     )
     stations = TypeAdapter(list[OnRouteStation]).validate_python(stations_rows)
+
+    if not stations:
+        return {
+            "original_route": original_route,
+            "stations": []
+        }
+
     assign_segment_ids(stations, original_route.distance, business_settings.SEGMENT_LENGTH_M)
 
     # 3. Parallelize Prices & OSRM Matrices
@@ -187,6 +194,9 @@ async def get_nearby_stations(
     # 2. Fetch Stations
     stations_rows = await db_repo.stations.fetch_nearby(polygon_wkt)
     stations = TypeAdapter(list[NearbyStation]).validate_python(stations_rows)
+
+    if not stations:
+        return {"stations": []}
 
     # 3. Parallelize Prices & OSRM Matrices
     osrm = OsrmClient(httpx_client)
