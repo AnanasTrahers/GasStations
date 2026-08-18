@@ -14,6 +14,7 @@ Cross-cutting helpers used by the API, service layer, clients, scrapers, and DAG
 - `response_helpers.py` — safe extractors for Mapbox/OSRM JSON shapes (route coords/length/duration, matrix distances/durations, isochrone polygon); raise+log on missing keys.
 - `billing.py` — `_verify_pubsub_signature` (HMAC-SHA256 over body vs `GOOGLE_PUBSUB_VERIFICATION_TOKEN`, constant-time compare) and `_decode_pubsub_payload` (base64+json decode of Pub/Sub `message.data`).
 - `annotations.py` — type aliases (e.g. `StrUUID`).
+- `geo_validation.py` — geospatial validation (`GeoValidator`) for points and routes using an import-time loaded, pre-computed WKB polygon. Fails fast if the asset is missing.
 
 ## Local Contracts
 

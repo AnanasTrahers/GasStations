@@ -101,6 +101,12 @@ Default section order:
 
 When the user requests a durable behavior change, record it here or in the relevant child AGENTS.md
 
+- **Error Messages**: Backend endpoints should return error details in English, not Ukrainian.
+- **Python Quality Standards**:
+  - Prefer `pathlib` over `os.path` for all path manipulations.
+  - Encapsulate module state in classes and use lazy initialization (e.g. `@classmethod` or properties) for heavy data loads (like loading GeoJSON or performing spatial operations) to avoid blocking main thread on import.
+  - Catch specific exceptions (e.g., `FileNotFoundError`, `JSONDecodeError`) rather than generic `Exception`.
+
 ## Child DOX Index
 
 - `src/` — importable application: FastAPI app, config, async DB, ORM models, schemas, repositories, service layer, DI, security, billing, seeder. Owns `clients/`, `routers/`, `utils/`, `prices_module/`.

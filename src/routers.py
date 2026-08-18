@@ -1,10 +1,12 @@
 import asyncio
 
-from fastapi import APIRouter, status, Depends, Header, Response
+from fastapi import APIRouter, status, Depends, Header, Response, HTTPException
 from fastapi.responses import JSONResponse
 from httpx import AsyncClient
 from pydantic import TypeAdapter
 from redis.asyncio import Redis
+
+from src.utils.geo_validation import is_point_in_ukraine, is_route_in_ukraine
 
 from src.clients.mapbox import MapboxClient
 from src.clients.osrm import OsrmClient
@@ -85,9 +87,15 @@ async def get_on_route_stations(
 ):
     Logger.info("Starting on-route optimization request...")
 
+    if not is_point_in_ukraine(data.start.lat, data.start.lng) or not is_point_in_ukraine(data.end.lat, data.end.lng):
+        raise HTTPException(status_code=400, detail="Points must be within Ukraine")
+
     # 1. Fetch Route
     mapbox = MapboxClient(httpx_client)
     original_route = await fetch_and_build_simple_route(mapbox, data.start, data.end)
+    
+    if not is_route_in_ukraine(original_route.geometry.coordinates):
+        raise HTTPException(status_code=400, detail="Route cannot pass through other countries")
 
     # 2. Fetch Stations
     route_wkt = get_route_wkt(original_route.geometry.coordinates)
@@ -186,6 +194,9 @@ async def get_nearby_stations(
         httpx_client: AsyncClient = Depends(get_httpx_client)
 ):
     Logger.info("Starting nearby optimization request...")
+
+    if not is_point_in_ukraine(data.start.lat, data.start.lng):
+        raise HTTPException(status_code=400, detail="Points must be within Ukraine")
 
     # 1. Fetch Isochrone Polygon
     mapbox = MapboxClient(httpx_client)

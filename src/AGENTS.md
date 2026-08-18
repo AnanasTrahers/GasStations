@@ -2,12 +2,12 @@
 
 ## Purpose
 
-The importable application: FastAPI app, config, async DB engine/session, ORM models, pydantic schemas, repositories, service layer, dependency injection, security, billing logic, and the DB seeder. Owns the `clients/`, `routers/`, `utils/`, and `prices_module/` sub-packages.
+The importable application: FastAPI app, config, async DB engine/session, ORM models, pydantic schemas, repositories, service layer, dependency injection, security, billing logic, and the DB seeder. Owns the `clients/`, `routers/`, `utils/`, `prices_module/`, and `assets/` sub-packages.
 
 ## Ownership
 
 - Direct files: `main.py`, `config.py`, `database.py`, `models.py`, `schemas.py`, `repositories.py`, `service.py`, `dependencies.py`, `security.py`, `billing.py`, `seeder.py`, `api/middleware.py`.
-- Sub-packages (`clients/`, `routers/`, `utils/`, `prices_module/`) own their own contracts; see their AGENTS.md.
+- Sub-packages (`clients/`, `routers/`, `utils/`, `prices_module/`, `assets/`) own their own contracts; see their AGENTS.md (if applicable).
 
 ## Local Contracts
 
