@@ -48,14 +48,17 @@ async def seed_db():
         #     FuelPrice(network_id=mn4, fuel_type=FuelTypeEnum.LPG, price=27.90),
         # ])
 
-        # Query existing networks that should have been populated by Airflow ETL
+        # Query existing networks that should have been populated by the price ETL
         stmt = select(Network).where(Network.name.in_(["WOG", "ОККО", "UPG", "SOCAR"]))
         networks = (await session.execute(stmt)).scalars().all()
         
         network_map = {n.name: n.id for n in networks}
         
         if not network_map:
-            print("No networks found! Please run the Airflow ETL first to populate Networks and Prices.")
+            print(
+                "No networks found! Run the price ETL first to populate Networks and Prices:\n"
+                "  uv run python -m src.worker.trigger fuel_prices_etl --now"
+            )
             return
 
         stations = []

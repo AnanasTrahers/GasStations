@@ -13,7 +13,7 @@ class Base(DeclarativeBase):
 
 engine = create_async_engine(
     project_settings.DATABASE_URL,
-    echo=True,
+    echo=project_settings.DB_ECHO,
     connect_args={
         "server_settings": {"search_path": "app, public, topology"}
     }

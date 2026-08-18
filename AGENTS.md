@@ -5,7 +5,7 @@
 
 ## Project
 
-GasStations — a FastAPI/SQLAlchemy service on PostGIS with two subsystems sharing one codebase and DB: (1) a route-optimization API that picks the cheapest gas stations along a driving route (Mapbox directions + PostGIS + OSRM matrices), and (2) a fuel-price ETL (`src/prices_module/`, orchestrated by Airflow in `dags/`) that scrapes Ukrainian fuel-price sites and bulk-upserts into `fuel_prices`. Python 3.13, `uv` for deps, Docker Compose for local infra (PostGIS, Redis, OSRM).
+GasStations — a FastAPI/SQLAlchemy service on PostGIS with two subsystems sharing one codebase and DB: (1) a route-optimization API that picks the cheapest gas stations along a driving route (Mapbox directions + PostGIS + OSRM matrices), and (2) a fuel-price ETL (`src/prices_module/`, orchestrated by the arq worker in `src/worker/`) that scrapes Ukrainian fuel-price sites and bulk-upserts into `fuel_prices`. Python 3.13, `uv` for deps, Docker Compose for local infra (PostGIS, Redis, OSRM).
 
 ### Root-owned files
 
@@ -13,7 +13,7 @@ GasStations — a FastAPI/SQLAlchemy service on PostGIS with two subsystems shar
 - `Dockerfile` — app image; runs `uvicorn src.main:app` on `:8000`.
 - `docker-compose.yml` — `db` (postgis), `redis`, `app`, `osrm-preprocessor`, `osrm`.
 - `alembic.ini` — Alembic config (`script_location = migrations`, `prepend_sys_path = .`).
-- `.env` — per-machine, gitignored; loaded only by `src/config.py` (and `airflow_local_settings.py` via dotenv). Airflow CLIs must run as `uv run --env-file .env airflow ...`.
+- `.env` — per-machine, gitignored; loaded only by `src/config.py`'s pydantic `ProjectSettings` (reads the file directly, never populates `os.environ`). The arq worker needs no `--env-file`.
 - `CLAUDE.md` — legacy Claude Code guide; superseded by this DOX tree for agent work. Do not extend it; record new durable knowledge in the nearest AGENTS.md.
 
 ### Repo-wide rules
@@ -115,7 +115,6 @@ When the user requests a durable behavior change, record it here or in the relev
   - `src/utils/` — shared utilities (logging, Redis cache, ETag, WKT builders, response helpers, billing/Pub-Sub helpers, datetime/uuid).
   - `src/prices_module/` — fuel-price ETL subsystem and station import (enums, schemas, mappers, network registry, DAL with spatial upsert, settings, utils).
     - `src/prices_module/scrapers/` — site scrapers (`base`, `minfin`, `vseazs`, `overpass`).
-- `dags/` — Airflow ETL DAGs (`fuel_prices_etl` async, `fuel_prices_etl_sync` sync variant, `gas_stations_import` weekly station import from OSM).
+  - `src/worker/` — arq worker: ETL job coroutines (`fuel_prices_etl` daily, `gas_stations_import` weekly from OSM), `WorkerSettings` with cron schedules, enqueue pool, and the `trigger` CLI.
 - `migrations/` — async Alembic for the `app` schema (GeoAlchemy2-wired).
-- `airflow_home/` — Airflow `$AIRFLOW_HOME`; `config/airflow_local_settings.py` bootstraps `sys.path` so DAGs import `src.*`.
 - `osrm/` — OSRM Docker preprocessing entrypoint (download + extract + contract Ukraine OSM).

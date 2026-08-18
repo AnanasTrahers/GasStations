@@ -8,8 +8,11 @@ from redis.asyncio import Redis
 from sqlalchemy.exc import SQLAlchemyError
 
 from src import routers
+from src.api import admin_router
 from src.api.middleware import LogIdMiddleware
 from src.config import project_settings
+from src.utils.logs import Logger
+from src.worker.pool import create_arq_pool
 
 
 @asynccontextmanager
@@ -21,11 +24,23 @@ async def lifespan(app: FastAPI):
     )
     redis_client = Redis.from_url(project_settings.REDIS_URL, decode_responses=True)
 
+    # Separate connection from redis_client above: arq speaks bytes, so it cannot
+    # share a decode_responses=True client. Only the admin endpoints need it, so a
+    # dead queue must not stop the optimization API from serving.
+    try:
+        arq_pool = await create_arq_pool()
+    except Exception as exc:
+        Logger.error("Could not open the arq pool; job endpoints disabled", error=exc)
+        arq_pool = None
+
     yield {
         "httpx_client": httpx_client,
         "redis_client": redis_client,
+        "arq_pool": arq_pool,
     }
 
+    if arq_pool is not None:
+        await arq_pool.aclose()
     await redis_client.aclose()
     await httpx_client.aclose()
 
@@ -50,6 +65,7 @@ async def database_offline_handler(request: Request, exc: SQLAlchemyError):
 
 
 app.include_router(routers.router)
+app.include_router(admin_router.router)
 
 app.add_middleware(LogIdMiddleware)
 

@@ -11,11 +11,26 @@ class ScrapersSettings:
     MAX_RETRIES = 3
     RETRY_BACKOFF_BASE = 1.5  # seconds; multiplied by 2^n on each attempt
 
-    VSEAZS_LIMITER = asyncio.Semaphore(4)
+    VSEAZS_CONCURRENCY = 4
 
     PARSERS_THREAD_EXECUTOR = ThreadPoolExecutor(max_workers=4)
 
     OVERPASS_TIMEOUT = 240.0
+
+    def __init__(self) -> None:
+        self._vseazs_limiter: asyncio.Semaphore | None = None
+
+    @property
+    def VSEAZS_LIMITER(self) -> asyncio.Semaphore:
+        """Bound simultaneous POSTs to vseazs.com.
+
+        Created lazily rather than at import time: a semaphore built before any
+        event loop exists binds to whichever loop first awaits it, which would
+        break the moment a second ``asyncio.run`` ran in the same process.
+        """
+        if self._vseazs_limiter is None:
+            self._vseazs_limiter = asyncio.Semaphore(self.VSEAZS_CONCURRENCY)
+        return self._vseazs_limiter
 
 
 scraper_settings = ScrapersSettings()
