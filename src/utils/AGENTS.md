@@ -10,7 +10,7 @@ Cross-cutting helpers used by the API, service layer, clients, scrapers, and DAG
 - `order.py` — `get_datetime_utc`, `get_datetime_kyiv` (Europe/Kyiv), `get_uuid_str`, `get_log_id` (reads/sets `LOG_ID` ContextVar, defaulting to a fresh uuid).
 - `redis.py` — `get_cached_fuel_types` / `set_cached_fuel_types` under key `fuel_types`, TTL `FUEL_TYPES_CACHE_TTL`.
 - `etag.py` — `generate_etag` (md5 of str(data)) and `check_etag_match`.
-- `wkt_builders.py` — `get_route_wkt` (LineString) and `get_polygon_wkt` (Polygon) → `WKTElement` SRID 4326, via shapely.
+- `wkt_builders.py` — `get_route_wkt` (LineString) and `get_polygon_wkt` (Polygon) → `WKTElement` SRID 4326, via shapely. Note the nesting differs: `get_route_wkt` takes a flat list of `[lng, lat]` points, while `get_polygon_wkt` takes GeoJSON *rings* (`[shell, *holes]`, one level deeper) exactly as `get_polygon` returns them from an isochrone response.
 - `response_helpers.py` — safe extractors for Mapbox/OSRM JSON shapes (route coords/length/duration, matrix distances/durations, isochrone polygon); raise+log on missing keys.
 - `billing.py` — `_verify_pubsub_signature` (HMAC-SHA256 over body vs `GOOGLE_PUBSUB_VERIFICATION_TOKEN`, constant-time compare) and `_decode_pubsub_payload` (base64+json decode of Pub/Sub `message.data`).
 - `annotations.py` — type aliases (e.g. `StrUUID`).

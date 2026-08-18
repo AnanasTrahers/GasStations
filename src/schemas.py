@@ -6,7 +6,7 @@ import uuid
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy.engine.row import Row
 
-from prices_module.enums import FuelTypeEnum
+from src.prices_module.enums import FuelTypeEnum
 from src.utils.logs import Logger
 
 

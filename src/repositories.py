@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql.expression import select, func, cast
 
-from prices_module.enums import FuelTypeEnum
+from src.prices_module.enums import FuelTypeEnum
 from src.config import business_settings
 from src.models import GasStation, FuelPrice, Network
 from src.utils.logs import LoggerMixin

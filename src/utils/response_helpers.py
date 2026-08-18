@@ -41,7 +41,7 @@ def get_matrix_durations(matrix_json: dict) -> list[float] | list[list[float]]:
         raise
 
 
-def get_polygon(isochrones_json: dict) -> list[list[float]]:
+def get_polygon(isochrones_json: dict) -> list[list[list[float]]]:
     try:
         return isochrones_json["features"][0]["geometry"]["coordinates"]
     except (KeyError, IndexError, TypeError) as e:

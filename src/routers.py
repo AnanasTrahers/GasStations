@@ -207,4 +207,6 @@ async def get_nearby_stations(
     )
 
     Logger.info(f"Completed nearby optimization. Returning {len(top_stations)} stations")
-    return top_stations
+    return {
+        "stations": top_stations
+    }

@@ -6,7 +6,7 @@ from sqlalchemy.engine.row import Row, Sequence
 from geoalchemy2 import WKTElement
 from redis.asyncio import Redis
 
-from prices_module.enums import FuelTypeEnum
+from src.prices_module.enums import FuelTypeEnum
 from src.clients.mapbox import MapboxClient
 from src.clients.osrm import OsrmClient
 from src.repositories import DBRepository
