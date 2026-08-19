@@ -14,6 +14,7 @@ class Base(DeclarativeBase):
 engine = create_async_engine(
     project_settings.DATABASE_URL,
     echo=project_settings.DB_ECHO,
+    pool_recycle=1800,
     connect_args={
         "server_settings": {"search_path": "app, public, topology"}
     }

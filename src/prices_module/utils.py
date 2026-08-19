@@ -46,10 +46,10 @@ def tenacity_log_after(retry_state: RetryCallState):
             error=retry_state.outcome.exception()
         )
     else:
-        Logger.error(
+        Logger.info(
             "Successfully scraped",
             args=retry_state.args,
             kwargs=retry_state.kwargs,
             attempt=retry_state.attempt_number,
-            error=retry_state.outcome.result()
+            result=retry_state.outcome.result()
         )

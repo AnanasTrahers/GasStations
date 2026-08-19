@@ -136,62 +136,12 @@ class VseazsScraper(BaseScraper):
             all_records.extend(chunk)
         return all_records
 
-    async def collect_raw(
-            self, *,
-            region: RegionEnum,
-            date_: date | None = None
-    ) -> list[str]:
-        """Fetch per-network fuel prices for all fuel types in parallel."""
-        date_ = date_ if date_ else date.today()
-        await self._ensure_cookies()
-
-        region_id = VseazsMapper.get_region(region)
-
-        async def _fetch_one(fuel_type: FuelTypeEnum) -> tuple[str, FuelTypeEnum]:
-            fuel_id = VseazsMapper.get_fuel(fuel_type)
-            async with scraper_settings.VSEAZS_LIMITER:
-                raw: httpx.Response = await self._post(
-                    url=self.PRICES_TABLE_ENDPOINT,
-                    data={
-                        "ID_region": region_id,
-                        "ID_fuel": fuel_id,
-                        "ID_brand": 89,  # hardcoded to collect all data together
-                        "UserDate": date_.strftime("%d.%m.%Y"),
-                    },
-                    headers={"Referer": self.MAIN_PAGE},
-                )
-            return raw.text, fuel_type
-
-        raw_results = await asyncio.gather(
-            *[_fetch_one(ft) for ft in FuelTypeEnum]
-        )
-        # ...
-        # return all_records
-
-
-    def a(self):
-        try:
-            1 / 0
-        except Exception as e:
-            self.log_error("amsdfmmdfm", error=e)
-
 
 if __name__ == '__main__':
     async def main():
-        try:
-            1/0
-        except Exception as e:
-            Logger.error("amsdfmmdfm", error=e)
         async with VseazsScraper() as scraper:
-            scraper.log_info(msg="asdasd", sth="skmflmkvf", a=123)
-            try:
-                1 / 0
-            except Exception as e:
-                scraper.log_error("amsdfmmdfm", error=e)
-            scraper.a()
-            # data = await scraper.collect(region=RegionEnum.KYIV)
-            # print(f"Records: {len(data)}")
-            # print(data)
-
+            data = await scraper.collect(region=RegionEnum.KYIV)
+            print(f"Records: {len(data)}")
+            print(data)
 
     asyncio.run(main())

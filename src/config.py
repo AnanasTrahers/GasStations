@@ -11,6 +11,9 @@ class ProjectSettings(BaseSettings):
     REDIS_URL: str
     MAPBOX_API_KEY: str
 
+    ENVIRONMENT: str = "development"
+    ALLOWED_HOSTS: list[str] = ["*"]
+
     DB_ECHO: bool = False
     """Log every statement. Off by default — the arq worker bulk-upserts hundreds
     of rows per run and would otherwise drown its own logs in SQL."""

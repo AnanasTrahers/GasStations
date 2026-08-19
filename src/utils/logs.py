@@ -4,6 +4,7 @@ import traceback
 import logging
 import structlog
 
+from src.config import project_settings
 from src.utils.order import get_log_id
 
 handler = logging.StreamHandler(sys.stdout)
@@ -17,7 +18,7 @@ structlog.configure(
         # structlog.stdlib.PositionalArgumentsFormatter(),
         # structlog.processors.StackInfoRenderer(),
         # structlog.processors.format_exc_info,
-        structlog.dev.ConsoleRenderer(sort_keys=False),
+        structlog.processors.JSONRenderer() if project_settings.ENVIRONMENT == "production" else structlog.dev.ConsoleRenderer(sort_keys=False),
     ],
     wrapper_class=structlog.make_filtering_bound_logger(logging.DEBUG),
     context_class=dict,

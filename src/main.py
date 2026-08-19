@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 import httpx
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 from sqlalchemy.exc import SQLAlchemyError
@@ -44,7 +45,12 @@ async def lifespan(app: FastAPI):
     await httpx_client.aclose()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url="/docs" if project_settings.ENVIRONMENT != "production" else None,
+    redoc_url="/redoc" if project_settings.ENVIRONMENT != "production" else None,
+    openapi_url="/openapi.json" if project_settings.ENVIRONMENT != "production" else None,
+)
 
 
 @app.exception_handler(httpx.HTTPError)
@@ -65,7 +71,12 @@ async def database_offline_handler(request: Request, exc: SQLAlchemyError):
 
 app.include_router(routers.router)
 
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=project_settings.ALLOWED_HOSTS)
 app.add_middleware(LogIdMiddleware)
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 
 if __name__ == '__main__':

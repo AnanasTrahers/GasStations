@@ -117,4 +117,5 @@ When the user requests a durable behavior change, record it here or in the relev
     - `src/prices_module/scrapers/` — site scrapers (`base`, `minfin`, `vseazs`, `overpass`).
   - `src/worker/` — arq worker: ETL job coroutines (`fuel_prices_etl` daily, `gas_stations_import` weekly from OSM), `WorkerSettings` with cron schedules, enqueue pool, and the `trigger` CLI.
 - `migrations/` — async Alembic for the `app` schema (GeoAlchemy2-wired).
-- `osrm/` — OSRM Docker preprocessing entrypoint (download + extract + contract Ukraine OSM).
+- `.infra/` — infrastructure scripts and configuration (e.g., local OSRM preprocessing, nginx proxy config).
+- `.github/` — GitHub Actions CI/CD workflows for automated deployment to the VPS.

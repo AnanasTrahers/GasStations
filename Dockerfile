@@ -1,8 +1,8 @@
 # Use Python 3.13 slim image
 FROM python:3.13-slim-bookworm
 
-# Install uv from the official image
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# Install uv from the official image (pinned version)
+COPY --from=ghcr.io/astral-sh/uv:0.4.15 /uv /uvx /bin/
 
 # Set working directory
 WORKDIR /app
@@ -22,5 +22,9 @@ COPY . /app
 # Complete the sync to install the project itself (if applicable)
 RUN if [ -f uv.lock ]; then uv sync --frozen; else uv sync; fi
 
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+
 # Set default execution command
-CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--workers", "4"]
