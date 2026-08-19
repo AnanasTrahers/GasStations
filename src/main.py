@@ -8,7 +8,6 @@ from redis.asyncio import Redis
 from sqlalchemy.exc import SQLAlchemyError
 
 from src import routers
-from src.api import admin_router
 from src.api.middleware import LogIdMiddleware
 from src.config import project_settings
 from src.utils.logs import Logger
@@ -65,7 +64,6 @@ async def database_offline_handler(request: Request, exc: SQLAlchemyError):
 
 
 app.include_router(routers.router)
-app.include_router(admin_router.router)
 
 app.add_middleware(LogIdMiddleware)
 

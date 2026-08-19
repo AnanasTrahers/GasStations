@@ -47,12 +47,18 @@ class WorkerSettings:
 
     cron_jobs = [
         # was: dags/prices_dag.py schedule="0 6 * * *"
-        cron(jobs.fuel_prices_etl, hour=6, minute=0, max_tries=3, timeout=600),
+        cron(
+            jobs.fuel_prices_etl,    # type: ignore
+            hour=6,
+            minute=0,
+            max_tries=3,
+            timeout=600,
+        ),
         # was: dags/stations_dag.py schedule="0 4 * * 0"
         # Overpass allows itself 240s per request (OVERPASS_TIMEOUT) and tenacity
         # retries it 3x, so this needs far more than arq's 300s default.
         cron(
-            jobs.gas_stations_import,
+            jobs.gas_stations_import,    # type: ignore
             weekday="sun",
             hour=4,
             minute=0,
