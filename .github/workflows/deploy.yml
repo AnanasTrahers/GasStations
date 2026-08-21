@@ -62,20 +62,21 @@ jobs:
             cd ~/GasStations
             
             # Pull the latest changes from git
+            git checkout main
             git pull origin main
             
             # Login to GHCR to pull private images (if applicable)
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Pull the latest images
-            docker-compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml pull
             
             # Start the database and redis first (to ensure they are running for migrations)
-            docker-compose -f docker-compose.prod.yml up -d db redis
+            docker compose -f docker-compose.prod.yml up -d db redis
             
             # Run Alembic migrations against the production DB
             # We use a temporary container based on the new app image to run migrations
-            docker-compose -f docker-compose.prod.yml run --rm app uv run alembic upgrade head
+            docker compose -f docker-compose.prod.yml run --rm app uv run alembic upgrade head
             
             # Start/Update the rest of the stack
-            docker-compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans

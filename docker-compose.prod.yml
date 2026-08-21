@@ -40,7 +40,7 @@ services:
         max-file: "3"
 
   app:
-    image: ghcr.io/${GHCR_USERNAME:-your-username}/gasstations-app:latest
+    image: ghcr.io/ananases/gasstations-app:latest
     container_name: gasstations-app
     restart: unless-stopped
     depends_on:
@@ -78,7 +78,7 @@ services:
           memory: 1024M
 
   worker:
-    image: ghcr.io/${GHCR_USERNAME:-your-username}/gasstations-app:latest
+    image: ghcr.io/ananases/gasstations-app:latest
     container_name: gasstations-worker
     restart: unless-stopped
     depends_on:
