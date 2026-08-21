@@ -58,8 +58,8 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Navigate to project directory (assuming it's checked out on the VPS)
-            cd /path/to/GasStations
+            # TODO: Set your actual VPS project directory path below
+            cd ~/GasStations
             
             # Pull the latest changes from git
             git pull origin main

@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import httpx
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from redis.asyncio import Redis
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -77,6 +78,14 @@ app.add_middleware(LogIdMiddleware)
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+
+_PRIVACY_POLICY_PATH = Path(__file__).parent / "assets" / "privacy_policy.html"
+
+
+@app.get("/privacy-policy", response_class=HTMLResponse)
+async def privacy_policy():
+    return _PRIVACY_POLICY_PATH.read_text(encoding="utf-8")
 
 
 if __name__ == '__main__':

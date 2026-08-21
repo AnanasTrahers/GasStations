@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Політика конфіденційності — FuelWay</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --text: #e4e6ed;
+            --muted: #9499a8;
+            --accent: #6c8cff;
+            --border: #2a2d3a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.25rem;
+            color: #fff;
+        }
+        .subtitle {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        h2 {
+            font-size: 1.2rem;
+            color: var(--accent);
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+        h3 {
+            font-size: 1.05rem;
+            color: #cdd1dc;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        p, li {
+            color: var(--text);
+            font-size: 0.93rem;
+            margin-bottom: 0.65rem;
+        }
+        ul, ol {
+            padding-left: 1.5rem;
+        }
+        li { margin-bottom: 0.4rem; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border);
+        }
+        th {
+            background: rgba(108, 140, 255, 0.1);
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+        .footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 2rem;
+        }
+        .lang-switch {
+            text-align: right;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+        }
+        .lang-switch a {
+            padding: 0.3rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-left: 0.4rem;
+        }
+        .lang-switch a.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .section-en { display: none; }
+    </style>
+    <script>
+        function switchLang(lang) {
+            document.querySelectorAll('.section-uk').forEach(el => el.style.display = lang === 'uk' ? '' : 'none');
+            document.querySelectorAll('.section-en').forEach(el => el.style.display = lang === 'en' ? '' : 'none');
+            document.querySelectorAll('.lang-switch a').forEach(el => el.classList.remove('active'));
+            document.querySelector('.lang-switch a[data-lang="' + lang + '"]').classList.add('active');
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+
+        <div class="lang-switch">
+            <a href="#" data-lang="uk" class="active" onclick="switchLang('uk'); return false;">🇺🇦 Українська</a>
+            <a href="#" data-lang="en" onclick="switchLang('en'); return false;">🇬🇧 English</a>
+        </div>
+
+        <!-- ===================== UKRAINIAN VERSION ===================== -->
+        <div class="section-uk">
+
+        <h1>Політика конфіденційності</h1>
+        <p class="subtitle">FuelWay — мобільний додаток для пошуку оптимальних АЗС</p>
+        <p class="subtitle">Дата набрання чинності: 20 серпня 2026 р. &nbsp;|&nbsp; Остання зміна: 20 серпня 2026 р.</p>
+
+        <h2>1. Загальні положення</h2>
+        <p>
+            Ця Політика конфіденційності ("Політика") описує, як мобільний додаток FuelWay ("Додаток", "ми", "наш")
+            збирає, обробляє, зберігає та захищає інформацію користувачів ("ви", "ваш"). Використовуючи Додаток,
+            ви погоджуєтесь із цією Політикою. Якщо ви не згодні з будь-яким із її положень, будь ласка, не
+            використовуйте Додаток.
+        </p>
+        <p>
+            Ми зобов'язуємося захищати вашу конфіденційність та обробляти ваші дані відповідно до
+            Закону України «Про захист персональних даних», Загального регламенту захисту даних (GDPR)
+            Європейського Союзу та інших чинних нормативних актів.
+        </p>
+
+        <h2>2. Оператор даних</h2>
+        <!-- TODO: Replace with your real legal entity or individual entrepreneur details -->
+        <p>
+            Оператором (контролером) персональних даних є фізична особа-підприємець або юридична особа,
+            що розробляє та підтримує додаток FuelWay.<br>
+            📧 Контактна електронна пошта: <a href="mailto:support@fuelway.app">support@fuelway.app</a>
+        </p>
+
+        <h2>3. Які дані ми збираємо</h2>
+        <p>Ми не вимагаємо створення облікового запису і не збираємо ідентифікаційних даних (ім'я, email, телефон). Нижче наведено повний перелік даних, що обробляються:</p>
+
+        <table>
+            <tr>
+                <th>Тип даних</th>
+                <th>Мета збору</th>
+                <th>Термін зберігання</th>
+                <th>Передача третім особам</th>
+            </tr>
+            <tr>
+                <td><strong>Геолокація</strong> (GPS-координати)</td>
+                <td>Побудова маршрутів, пошук найближчих АЗС, оптимізація витрат на пальне</td>
+                <td>Не зберігається після обробки запиту</td>
+                <td>Mapbox (для побудови маршрутів)</td>
+            </tr>
+            <tr>
+                <td><strong>Точка призначення</strong> (координати, вибрані на карті)</td>
+                <td>Побудова маршруту від поточного місцезнаходження до обраної точки</td>
+                <td>Не зберігається після обробки запиту</td>
+                <td>Mapbox, OSRM (маршрутизація)</td>
+            </tr>
+            <tr>
+                <td><strong>Налаштування користувача</strong> (тип пального, витрата, режим поїздки, тема карти)</td>
+                <td>Персоналізація результатів пошуку</td>
+                <td>Зберігається локально на пристрої (DataStore)</td>
+                <td>Не передається</td>
+            </tr>
+            <tr>
+                <td><strong>Рекламний ідентифікатор</strong> (Advertising ID)</td>
+                <td>Показ персоналізованої реклами через Google AdMob</td>
+                <td>Згідно з політикою Google</td>
+                <td>Google AdMob</td>
+            </tr>
+            <tr>
+                <td><strong>Технічні дані</strong> (тип пристрою, версія ОС, версія додатку)</td>
+                <td>Забезпечення сумісності, діагностика помилок</td>
+                <td>Збираються автоматично Google Play</td>
+                <td>Google Play Services</td>
+            </tr>
+        </table>
+
+        <h2>4. Правова основа обробки даних</h2>
+        <ul>
+            <li><strong>Згода</strong> — ви надаєте явну згоду на доступ до геолокації через системний діалог дозволів Android. Ви можете відкликати цей дозвіл у будь-який момент через налаштування пристрою.</li>
+            <li><strong>Законний інтерес</strong> — обробка технічних даних для забезпечення стабільної роботи Додатку.</li>
+            <li><strong>Виконання договору</strong> — обробка координат для надання основної послуги (пошук АЗС та побудова маршрутів).</li>
+        </ul>
+
+        <h2>5. Як ми використовуємо зібрані дані</h2>
+        <ul>
+            <li>Визначення вашого поточного місцезнаходження для побудови маршрутів та пошуку АЗС поблизу.</li>
+            <li>Розрахунок оптимальних станцій заправки на основі цін на пальне, відстані та часу об'їзду.</li>
+            <li>Відображення навігаційних підказок під час поїздки.</li>
+            <li>Показ рекламних оголошень через Google AdMob.</li>
+            <li>Покращення якості Додатку та виправлення помилок.</li>
+        </ul>
+
+        <h2>6. Чого ми НЕ робимо</h2>
+        <ul>
+            <li>Ми <strong>не створюємо</strong> облікових записів і профілів користувачів.</li>
+            <li>Ми <strong>не збираємо</strong> імен, email-адрес, номерів телефонів чи іншої особистої інформації.</li>
+            <li>Ми <strong>не зберігаємо</strong> історію ваших маршрутів чи пошукових запитів на наших серверах.</li>
+            <li>Ми <strong>не продаємо</strong> і не передаємо ваші персональні дані для маркетингових цілей.</li>
+            <li>Ми <strong>не відстежуємо</strong> вашу активність поза межами Додатку.</li>
+            <li>Ми <strong>не збираємо</strong> дані в фоновому режимі, коли Додаток закритий.</li>
+        </ul>
+
+        <h2>7. Сторонні сервіси та SDK</h2>
+        <p>Додаток використовує наступні сторонні сервіси, кожен з яких має власну політику конфіденційності:</p>
+
+        <h3>7.1. Mapbox</h3>
+        <p>
+            Використовується для відображення карт та побудови маршрутів. Mapbox може отримувати
+            координати для рендерингу карти та геокодування.
+        </p>
+        <p>📄 <a href="https://www.mapbox.com/legal/privacy" target="_blank">Політика конфіденційності Mapbox</a></p>
+
+        <h3>7.2. Google AdMob</h3>
+        <p>
+            Використовується для показу рекламних оголошень. AdMob може збирати рекламний ідентифікатор
+            пристрою (Advertising ID), дані про взаємодію з рекламою, приблизне місцезнаходження на основі
+            IP-адреси та іншу технічну інформацію відповідно до політики Google.
+        </p>
+        <p>📄 <a href="https://policies.google.com/privacy" target="_blank">Політика конфіденційності Google</a></p>
+        <p>📄 <a href="https://support.google.com/admob/answer/6128543" target="_blank">Як Google використовує дані</a></p>
+
+        <h3>7.3. Google Play Services (Location)</h3>
+        <p>
+            Використовується для отримання точних GPS-координат пристрою. Google може обробляти
+            дані про місцезнаходження відповідно до своєї політики конфіденційності.
+        </p>
+        <p>📄 <a href="https://policies.google.com/privacy" target="_blank">Політика конфіденційності Google Play Services</a></p>
+
+        <h3>7.4. OSRM (Open Source Routing Machine)</h3>
+        <p>
+            Використовується на нашому сервері для розрахунку матриць відстаней. OSRM є
+            самостійно розміщеним сервісом (self-hosted) — дані не передаються стороннім серверам.
+        </p>
+
+        <h2>8. Передача даних за межі України</h2>
+        <p>
+            Деякі з наших сторонніх постачальників послуг (Mapbox, Google) можуть обробляти дані на серверах,
+            розташованих за межами України та ЄС (зокрема, у США). Така передача здійснюється на підставі:
+        </p>
+        <ul>
+            <li>Стандартних договірних умов (Standard Contractual Clauses), затверджених Європейською Комісією.</li>
+            <li>Програм сертифікації відповідності (де застосовно).</li>
+            <li>Вашої згоди на використання Додатку, що включає використання зазначених сторонніх сервісів.</li>
+        </ul>
+
+        <h2>9. Безпека даних</h2>
+        <p>Ми застосовуємо наступні заходи для захисту ваших даних:</p>
+        <ul>
+            <li><strong>Шифрування з'єднань:</strong> усі дані між Додатком і нашим сервером передаються через HTTPS/TLS.</li>
+            <li><strong>Мінімізація даних:</strong> ми збираємо лише ті дані, що необхідні для надання послуги.</li>
+            <li><strong>Відсутність збереження:</strong> координати користувача не зберігаються на сервері після обробки запиту.</li>
+            <li><strong>Обмежений доступ:</strong> доступ до серверної інфраструктури обмежений і захищений.</li>
+            <li><strong>Регулярні оновлення:</strong> ми підтримуємо актуальність програмного забезпечення та залежностей.</li>
+        </ul>
+        <p>
+            Незважаючи на вжиті заходи, жоден метод електронного зберігання або передачі даних через Інтернет
+            не є абсолютно безпечним. Ми не можемо гарантувати повну безпеку ваших даних.
+        </p>
+
+        <h2>10. Ваші права</h2>
+        <p>Відповідно до чинного законодавства, ви маєте право:</p>
+        <ul>
+            <li><strong>Доступу</strong> — отримати інформацію про те, чи обробляються ваші персональні дані.</li>
+            <li><strong>Видалення</strong> — оскільки ми не зберігаємо персональних даних на серверах, видалення не потрібне. Локальні налаштування можна видалити, очистивши дані Додатку або видаливши його.</li>
+            <li><strong>Відкликання згоди</strong> — ви можете відкликати дозвіл на геолокацію через налаштування Android у будь-який момент.</li>
+            <li><strong>Обмеження обробки</strong> — ви можете обмежити обробку даних, вимкнувши певні дозволи.</li>
+            <li><strong>Скарга</strong> — ви маєте право подати скаргу до Уповноваженого Верховної Ради України з прав людини або до відповідного наглядового органу.</li>
+            <li><strong>Відмова від персоналізованої реклами</strong> — ви можете скинути рекламний ідентифікатор або відмовитись від персоналізації реклами в налаштуваннях Android: <em>Налаштування → Конфіденційність → Реклама</em>.</li>
+        </ul>
+
+        <h2>11. Використання дітьми</h2>
+        <p>
+            Додаток не призначений для дітей віком до 13 років (або до 16 років у країнах, де це передбачено
+            місцевим законодавством). Ми свідомо не збираємо персональні дані від дітей. Якщо ви є батьком
+            або опікуном і вважаєте, що ваша дитина надала нам свої дані, будь ласка, зв'яжіться з нами,
+            і ми вживемо заходів для їх видалення.
+        </p>
+
+        <h2>12. Файли cookie та аналогічні технології</h2>
+        <p>
+            Додаток не використовує файли cookie. Сторонні SDK (Google AdMob) можуть використовувати
+            ідентифікатори пристрою та аналогічні технології для показу та аналітики реклами.
+            Деталі наведені в розділі 7.2.
+        </p>
+
+        <h2>13. Автоматизоване прийняття рішень</h2>
+        <p>
+            Додаток використовує алгоритми для ранжування АЗС на основі ціни пального, відстані та часу об'їзду.
+            Це не є профілюванням у розумінні GDPR, оскільки не базується на персональних даних користувача,
+            а лише на поточних координатах та обраних параметрах пошуку.
+        </p>
+
+        <h2>14. Збереження даних (Data Retention)</h2>
+        <ul>
+            <li><strong>Дані геолокації:</strong> обробляються в оперативній пам'яті сервера виключно протягом
+                виконання запиту (як правило, кілька секунд). Не записуються в базу даних, файлову систему чи логи.</li>
+            <li><strong>Налаштування користувача:</strong> зберігаються виключно на пристрої в Android DataStore.
+                Видаляються при очищенні даних Додатку або його видаленні.</li>
+            <li><strong>Серверні логи:</strong> можуть містити IP-адреси та метадані запитів. Зберігаються не більше
+                30 днів і використовуються виключно для діагностики та забезпечення безпеки.</li>
+        </ul>
+
+        <h2>15. Зміни до Політики конфіденційності</h2>
+        <p>
+            Ми залишаємо за собою право оновлювати цю Політику. Про суттєві зміни ми повідомимо через
+            оновлення Додатку або публікацію оновленої версії Політики за цією адресою.
+            Рекомендуємо періодично переглядати цю сторінку.
+        </p>
+        <p>
+            Продовження використання Додатку після внесення змін означає вашу згоду з оновленою Політикою.
+        </p>
+
+        <hr class="divider">
+
+        <h2>16. Контактна інформація</h2>
+        <p>
+            Якщо у вас є запитання, пропозиції чи скарги щодо цієї Політики конфіденційності
+            або обробки ваших даних, зв'яжіться з нами:
+        </p>
+        <!-- TODO: Replace with your actual contact email -->
+        <p>📧 Email: <a href="mailto:support@fuelway.app">support@fuelway.app</a></p>
+        <p>
+            Ми зобов'язуємося відповісти на ваш запит протягом 30 календарних днів.
+        </p>
+
+        </div>
+
+        <!-- ===================== ENGLISH VERSION ===================== -->
+        <div class="section-en">
+
+        <h1>Privacy Policy</h1>
+        <p class="subtitle">FuelWay — mobile app for finding optimal gas stations</p>
+        <p class="subtitle">Effective date: August 20, 2026 &nbsp;|&nbsp; Last updated: August 20, 2026</p>
+
+        <h2>1. Introduction</h2>
+        <p>
+            This Privacy Policy ("Policy") describes how the FuelWay mobile application ("App", "we", "our", "us")
+            collects, processes, stores, and protects user information ("you", "your"). By using the App,
+            you agree to this Policy. If you do not agree with any of its provisions, please do not use the App.
+        </p>
+        <p>
+            We are committed to protecting your privacy and processing your data in accordance with
+            the Law of Ukraine "On Protection of Personal Data", the General Data Protection Regulation (GDPR)
+            of the European Union, and other applicable regulations.
+        </p>
+
+        <h2>2. Data Controller</h2>
+        <!-- TODO: Replace with your real legal entity or individual entrepreneur details -->
+        <p>
+            The data controller is the individual entrepreneur or legal entity that develops
+            and maintains the FuelWay application.<br>
+            📧 Contact email: <a href="mailto:support@fuelway.app">support@fuelway.app</a>
+        </p>
+
+        <h2>3. Data We Collect</h2>
+        <p>We do not require account creation and do not collect personally identifiable information (name, email, phone number). Below is a complete list of data that is processed:</p>
+
+        <table>
+            <tr>
+                <th>Data Type</th>
+                <th>Purpose</th>
+                <th>Retention</th>
+                <th>Third-Party Sharing</th>
+            </tr>
+            <tr>
+                <td><strong>Geolocation</strong> (GPS coordinates)</td>
+                <td>Route building, nearby station search, fuel cost optimization</td>
+                <td>Not stored after request processing</td>
+                <td>Mapbox (for routing)</td>
+            </tr>
+            <tr>
+                <td><strong>Destination point</strong> (coordinates selected on map)</td>
+                <td>Building a route from current location to the selected point</td>
+                <td>Not stored after request processing</td>
+                <td>Mapbox, OSRM (routing)</td>
+            </tr>
+            <tr>
+                <td><strong>User preferences</strong> (fuel type, consumption, trip mode, map theme)</td>
+                <td>Personalizing search results</td>
+                <td>Stored locally on device (DataStore)</td>
+                <td>Not shared</td>
+            </tr>
+            <tr>
+                <td><strong>Advertising ID</strong></td>
+                <td>Serving personalized ads via Google AdMob</td>
+                <td>Per Google's policy</td>
+                <td>Google AdMob</td>
+            </tr>
+            <tr>
+                <td><strong>Technical data</strong> (device type, OS version, app version)</td>
+                <td>Compatibility, error diagnostics</td>
+                <td>Collected automatically by Google Play</td>
+                <td>Google Play Services</td>
+            </tr>
+        </table>
+
+        <h2>4. Legal Basis for Processing</h2>
+        <ul>
+            <li><strong>Consent</strong> — you provide explicit consent for location access through the Android system permission dialog. You can revoke this permission at any time through device settings.</li>
+            <li><strong>Legitimate interest</strong> — processing technical data to ensure stable App operation.</li>
+            <li><strong>Contract performance</strong> — processing coordinates to provide the core service (gas station search and route building).</li>
+        </ul>
+
+        <h2>5. How We Use Collected Data</h2>
+        <ul>
+            <li>Determining your current location for route building and finding nearby gas stations.</li>
+            <li>Calculating optimal refueling stations based on fuel prices, distance, and detour time.</li>
+            <li>Displaying navigation prompts during trips.</li>
+            <li>Showing advertisements through Google AdMob.</li>
+            <li>Improving App quality and fixing bugs.</li>
+        </ul>
+
+        <h2>6. What We Do NOT Do</h2>
+        <ul>
+            <li>We <strong>do not create</strong> user accounts or profiles.</li>
+            <li>We <strong>do not collect</strong> names, email addresses, phone numbers, or other personal information.</li>
+            <li>We <strong>do not store</strong> your route history or search queries on our servers.</li>
+            <li>We <strong>do not sell</strong> or share your personal data for marketing purposes.</li>
+            <li>We <strong>do not track</strong> your activity outside the App.</li>
+            <li>We <strong>do not collect</strong> data in the background when the App is closed.</li>
+        </ul>
+
+        <h2>7. Third-Party Services and SDKs</h2>
+        <p>The App uses the following third-party services, each with its own privacy policy:</p>
+
+        <h3>7.1. Mapbox</h3>
+        <p>
+            Used for map display and route building. Mapbox may receive coordinates for map rendering
+            and geocoding.
+        </p>
+        <p>📄 <a href="https://www.mapbox.com/legal/privacy" target="_blank">Mapbox Privacy Policy</a></p>
+
+        <h3>7.2. Google AdMob</h3>
+        <p>
+            Used for serving advertisements. AdMob may collect the device's Advertising ID,
+            ad interaction data, approximate location based on IP address, and other technical
+            information in accordance with Google's policies.
+        </p>
+        <p>📄 <a href="https://policies.google.com/privacy" target="_blank">Google Privacy Policy</a></p>
+        <p>📄 <a href="https://support.google.com/admob/answer/6128543" target="_blank">How Google uses data</a></p>
+
+        <h3>7.3. Google Play Services (Location)</h3>
+        <p>
+            Used to obtain precise GPS coordinates. Google may process location data in accordance
+            with its privacy policy.
+        </p>
+        <p>📄 <a href="https://policies.google.com/privacy" target="_blank">Google Play Services Privacy Policy</a></p>
+
+        <h3>7.4. OSRM (Open Source Routing Machine)</h3>
+        <p>
+            Used on our server for distance matrix calculations. OSRM is self-hosted —
+            no data is sent to third-party servers.
+        </p>
+
+        <h2>8. International Data Transfers</h2>
+        <p>
+            Some of our third-party service providers (Mapbox, Google) may process data on servers
+            located outside Ukraine and the EU (particularly in the USA). Such transfers are based on:
+        </p>
+        <ul>
+            <li>Standard Contractual Clauses (SCCs) approved by the European Commission.</li>
+            <li>Certification compliance programs (where applicable).</li>
+            <li>Your consent to use the App, which includes the use of the mentioned third-party services.</li>
+        </ul>
+
+        <h2>9. Data Security</h2>
+        <p>We implement the following measures to protect your data:</p>
+        <ul>
+            <li><strong>Connection encryption:</strong> all data between the App and our server is transmitted over HTTPS/TLS.</li>
+            <li><strong>Data minimization:</strong> we collect only data necessary to provide the service.</li>
+            <li><strong>No storage:</strong> user coordinates are not stored on the server after request processing.</li>
+            <li><strong>Restricted access:</strong> access to server infrastructure is limited and secured.</li>
+            <li><strong>Regular updates:</strong> we keep software and dependencies up to date.</li>
+        </ul>
+        <p>
+            Despite these measures, no method of electronic storage or transmission over the Internet
+            is completely secure. We cannot guarantee absolute data security.
+        </p>
+
+        <h2>10. Your Rights</h2>
+        <p>Under applicable law, you have the right to:</p>
+        <ul>
+            <li><strong>Access</strong> — obtain information about whether your personal data is being processed.</li>
+            <li><strong>Deletion</strong> — since we do not store personal data on servers, deletion is not required. Local preferences can be deleted by clearing App data or uninstalling it.</li>
+            <li><strong>Withdraw consent</strong> — you can revoke location permission through Android settings at any time.</li>
+            <li><strong>Restrict processing</strong> — you can limit data processing by disabling certain permissions.</li>
+            <li><strong>Complaint</strong> — you have the right to file a complaint with the Ukrainian Parliament Commissioner for Human Rights or the relevant supervisory authority.</li>
+            <li><strong>Opt out of personalized ads</strong> — you can reset your advertising ID or opt out of ad personalization in Android settings: <em>Settings → Privacy → Ads</em>.</li>
+        </ul>
+
+        <h2>11. Children's Privacy</h2>
+        <p>
+            The App is not intended for children under 13 years of age (or under 16 in countries where
+            local law requires it). We do not knowingly collect personal data from children. If you are
+            a parent or guardian and believe your child has provided us with their data, please contact us,
+            and we will take steps to delete it.
+        </p>
+
+        <h2>12. Cookies and Similar Technologies</h2>
+        <p>
+            The App does not use cookies. Third-party SDKs (Google AdMob) may use device identifiers
+            and similar technologies for ad serving and analytics. Details are provided in Section 7.2.
+        </p>
+
+        <h2>13. Automated Decision-Making</h2>
+        <p>
+            The App uses algorithms to rank gas stations based on fuel price, distance, and detour time.
+            This does not constitute profiling under GDPR, as it is not based on personal user data
+            but only on current coordinates and selected search parameters.
+        </p>
+
+        <h2>14. Data Retention</h2>
+        <ul>
+            <li><strong>Geolocation data:</strong> processed in server memory exclusively during
+                request execution (typically a few seconds). Not written to database, file system, or logs.</li>
+            <li><strong>User preferences:</strong> stored exclusively on the device in Android DataStore.
+                Deleted when clearing App data or uninstalling the App.</li>
+            <li><strong>Server logs:</strong> may contain IP addresses and request metadata. Retained for no more than
+                30 days and used exclusively for diagnostics and security purposes.</li>
+        </ul>
+
+        <h2>15. Changes to This Privacy Policy</h2>
+        <p>
+            We reserve the right to update this Policy. We will notify you of significant changes through
+            an App update or by publishing an updated version of the Policy at this address.
+            We recommend periodically reviewing this page.
+        </p>
+        <p>
+            Continued use of the App after changes are made constitutes your acceptance of the updated Policy.
+        </p>
+
+        <hr class="divider">
+
+        <h2>16. Contact Information</h2>
+        <p>
+            If you have questions, suggestions, or complaints regarding this Privacy Policy
+            or the processing of your data, please contact us:
+        </p>
+        <!-- TODO: Replace with your actual contact email -->
+        <p>📧 Email: <a href="mailto:support@fuelway.app">support@fuelway.app</a></p>
+        <p>
+            We commit to responding to your request within 30 calendar days.
+        </p>
+
+        </div>
+
+        <div class="footer">
+            <p>© 2026 FuelWay. All rights reserved. / Усі права захищені.</p>
+        </div>
+    </div>
+</body>
+</html>
