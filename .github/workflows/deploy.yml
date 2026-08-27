@@ -58,6 +58,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             # TODO: Set your actual VPS project directory path below
             cd ~/GasStations
             
@@ -80,3 +81,6 @@ jobs:
             
             # Start/Update the rest of the stack
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            
+            # Restart Nginx to ensure it resolves the new backend IP
+            docker compose -f docker-compose.prod.yml restart nginx
