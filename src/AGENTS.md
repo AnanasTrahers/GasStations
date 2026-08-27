@@ -2,11 +2,11 @@
 
 ## Purpose
 
-The importable application: FastAPI app, config, async DB engine/session, ORM models, pydantic schemas, repositories, service layer, dependency injection, security, billing logic, and the DB seeder. Owns the `clients/`, `routers/`, `utils/`, `prices_module/`, and `assets/` sub-packages.
+The importable application: FastAPI app, config, async DB engine/session, ORM models, pydantic schemas, repositories, service layer, and dependency injection. Owns the `clients/`, `routers/`, `utils/`, `prices_module/`, and `assets/` sub-packages.
 
 ## Ownership
 
-- Direct files: `main.py`, `config.py`, `database.py`, `models.py`, `schemas.py`, `repositories.py`, `service.py`, `dependencies.py`, `security.py`, `billing.py`, `seeder.py`, `api/middleware.py`.
+- Direct files: `main.py`, `config.py`, `database.py`, `models.py`, `schemas.py`, `repositories.py`, `service.py`, `dependencies.py`, `api/middleware.py`.
 - Sub-packages (`clients/`, `routers/`, `utils/`, `prices_module/`, `assets/`) own their own contracts; see their AGENTS.md (if applicable).
 
 ## Local Contracts
@@ -19,9 +19,8 @@ The importable application: FastAPI app, config, async DB engine/session, ORM mo
 - `repositories.py` — `DBRepository` facade aggregating `StationsRepository`, `PricesRepository`, `UsersRepository`, `SubscriptionsRepository`, each wrapping an `AsyncSession`. All inherit `LoggerMixin`.
 - `service.py` — pure/async functions for route optimization: spatial station fetch merge, segment assignment, forward+backward OSRM matrix merge, metric calculation, per-network top-N ranking, Redis-backed fuel-type caching.
 - `dependencies.py` — FastAPI `Depends` providers: `get_db_repo`, `get_httpx_client`, `get_redis`, `get_current_user_id` (JWT Bearer via `HTTPBearer`).
-- `security.py` — `verify_google_token` (offloaded via `asyncio.to_thread`) and `create_access_token` (HS256 JWT, TTL from `business_settings.JWT_TTL_DAYS`).
-- `billing.py` — Google Play mapping tables: RTDN `notificationType`→`SubscriptionStatus` and `subscriptionState`→`SubscriptionStatus`; `extract_subscription_data` builds the typed `SubscriptionData`.
-- `seeder.py` — dev-only seed script (`drop_all`/`create_all` then inserts). Run via `__main__`, not in production.
+
+
 - `api/middleware.py` — `LogIdMiddleware` sets `LOG_ID` per request and echoes `X-Request-ID`.
 
 ## Work Guidance
@@ -35,7 +34,7 @@ The importable application: FastAPI app, config, async DB engine/session, ORM mo
 ## Verification
 
 - `uv run python -c "import src.main"` imports the app and wires all routers.
-- `uv run python -m src.seeder` recreates and seeds a dev DB.
+
 
 ## Child DOX Index
 

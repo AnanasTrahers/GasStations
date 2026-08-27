@@ -110,7 +110,7 @@ When the user requests a durable behavior change, record it here or in the relev
 ## Child DOX Index
 
 - `src/` — importable application: FastAPI app, config, async DB, ORM models, schemas, repositories, service layer, DI, security, billing, seeder. Owns `clients/`, `routers/`, `utils/`, `prices_module/`.
-  - `src/clients/` — external HTTP clients (Mapbox, OSRM, Google Play).
+  - `src/clients/` — external HTTP clients (Mapbox, OSRM).
   - `src/routers/` — FastAPI routers mounted under `/v1` (optimization, auth, subscriptions).
   - `src/utils/` — shared utilities (logging, Redis cache, ETag, WKT builders, response helpers, billing/Pub-Sub helpers, datetime/uuid).
   - `src/prices_module/` — fuel-price ETL subsystem and station import (enums, schemas, mappers, network registry, DAL with spatial upsert, settings, utils).
