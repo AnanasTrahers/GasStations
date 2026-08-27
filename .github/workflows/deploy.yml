@@ -62,9 +62,10 @@ jobs:
             # TODO: Set your actual VPS project directory path below
             cd ~/GasStations
             
-            # Pull the latest changes from git
-            git checkout main
-            git pull origin main
+            # Force the server to perfectly match the GitHub repository
+            # (This bypasses any uncommitted manual changes on the VPS)
+            git fetch origin main
+            git reset --hard origin/main
             
             # Login to GHCR to pull private images (if applicable)
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
